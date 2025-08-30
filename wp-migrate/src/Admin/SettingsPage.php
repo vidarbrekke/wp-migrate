@@ -28,7 +28,6 @@ final class SettingsPage implements Registrable {
             'type'              => 'array',
             'sanitize_callback' => [ $this, 'sanitize' ],
             'default'           => [
-                'enabled' => 1,
                 'shared_key' => '',
                 'peer_url' => '',
                 'email_blackhole' => 1,
@@ -40,14 +39,6 @@ final class SettingsPage implements Registrable {
             \__( 'General', 'wp-migrate' ),
             '__return_false',
             'wp_migrate'
-        );
-
-        \add_settings_field(
-            'enabled',
-            \__( 'Enable WP-Migrate', 'wp-migrate' ),
-            [ $this, 'field_enabled' ],
-            'wp_migrate',
-            'wp_migrate_section'
         );
 
         \add_settings_field(
@@ -83,22 +74,11 @@ final class SettingsPage implements Registrable {
             $peer = preg_replace( '#/+$#', '', $peer );
         }
         return [
-            'enabled' => isset( $value['enabled'] ) ? 1 : 0,
             // Store shared key securely; avoid displaying it back in forms.
             'shared_key' => isset( $value['shared_key'] ) ? (string) $value['shared_key'] : '',
             'peer_url' => $peer,
             'email_blackhole' => isset( $value['email_blackhole'] ) ? 1 : 0,
         ];
-    }
-
-    public function field_enabled(): void {
-        $opts = \get_option( self::OPTION, [ 'enabled' => 1 ] );
-        ?>
-        <label>
-            <input type="checkbox" name="<?php echo \esc_attr( self::OPTION ); ?>[enabled]" value="1" <?php \checked( ! empty( $opts['enabled'] ) ); ?> />
-            <?php \esc_html_e( 'Enable WP-Migrate functionality', 'wp-migrate' ); ?>
-        </label>
-        <?php
     }
 
     public function field_shared_key(): void {

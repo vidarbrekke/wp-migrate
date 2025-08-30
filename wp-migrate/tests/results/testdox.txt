@@ -1,0 +1,20 @@
+Hmac Auth (WpMigrate\Tests\Security\HmacAuth)
+ [x] Verify request success
+ [x] Verify request missing shared key
+ [x] Verify request missing headers
+ [x] Verify request timestamp skew
+ [x] Verify request future timestamp
+ [x] Verify request nonce replay
+ [x] Verify request invalid signature
+ [x] Verify request peer mismatch
+ [x] Verify request peer normalization
+ [x] Verify request tls required
+ [x] Verify request proxy ssl detection
+ [x] Verify request different methods
+ [x] Verify request path normalization
+ [x] Verify request empty body
+ [x] Verify request large body
+ [x] Verify request concurrent different nonces
+ [x] Verify request malformed headers
+ [x] Verify request header case insensitivity
+

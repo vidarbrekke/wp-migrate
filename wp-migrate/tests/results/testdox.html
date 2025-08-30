@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title>Test Documentation</title>
+        <style>
+            body {
+                text-rendering: optimizeLegibility;
+                font-family: Source SansSerif Pro, Arial, sans-serif;
+                font-variant-ligatures: common-ligatures;
+                font-kerning: normal;
+                margin-left: 2rem;
+                background-color: #fff;
+                color: #000;
+            }
+
+            body > ul > li {
+                font-size: larger;
+            }
+
+            h2 {
+                font-size: larger;
+                text-decoration-line: underline;
+                text-decoration-thickness: 2px;
+                margin: 0;
+                padding: 0.5rem 0;
+            }
+
+            ul {
+                list-style: none;
+                margin: 0 0 2rem;
+                padding: 0 0 0 1rem;
+                text-indent: -1rem;
+            }
+
+            .success:before {
+                color: #4e9a06;
+                content: '✓';
+                padding-right: 0.5rem;
+            }
+
+            .defect {
+                color: #a40000;
+            }
+
+            .defect:before {
+                color: #a40000;
+                content: '✗';
+                padding-right: 0.5rem;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Hmac Auth (WpMigrate\Tests\Security\HmacAuth)</h2>
+        <ul>
+            <li class="success">Verify request success</li>
+            <li class="success">Verify request missing shared key</li>
+            <li class="success">Verify request missing headers</li>
+            <li class="success">Verify request timestamp skew</li>
+            <li class="success">Verify request future timestamp</li>
+            <li class="success">Verify request nonce replay</li>
+            <li class="success">Verify request invalid signature</li>
+            <li class="success">Verify request peer mismatch</li>
+            <li class="success">Verify request peer normalization</li>
+            <li class="success">Verify request tls required</li>
+            <li class="success">Verify request proxy ssl detection</li>
+            <li class="success">Verify request different methods</li>
+            <li class="success">Verify request path normalization</li>
+            <li class="success">Verify request empty body</li>
+            <li class="success">Verify request large body</li>
+            <li class="success">Verify request concurrent different nonces</li>
+            <li class="success">Verify request malformed headers</li>
+            <li class="success">Verify request header case insensitivity</li>
+        </ul>
+    </body>
+</html>
