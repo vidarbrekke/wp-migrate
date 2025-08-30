@@ -37,6 +37,33 @@ class ApiTest extends TestCase
     /** @var MockObject&ChunkStore */
     private MockObject $mockChunkStore;
 
+    /**
+     * Helper method to set up job state for testing
+     */
+    private function setupJobState(string $targetState): void
+    {
+        $reflection = new \ReflectionClass($this->api);
+        $jobManagerProperty = $reflection->getProperty('jobs');
+        $jobManagerProperty->setAccessible(true);
+        $jobManager = $jobManagerProperty->getValue($this->api);
+
+        // Define the state progression path
+        $stateProgression = [
+            'files_pass1' => ['preflight_ok', 'files_pass1'],
+            'db_uploaded' => ['preflight_ok', 'files_pass1', 'db_exported', 'db_uploaded'],
+            'db_imported' => ['preflight_ok', 'files_pass1', 'db_exported', 'db_uploaded', 'db_imported'],
+            'url_replaced' => ['preflight_ok', 'files_pass1', 'db_exported', 'db_uploaded', 'db_imported', 'url_replaced'],
+        ];
+
+        if (!isset($stateProgression[$targetState])) {
+            throw new \InvalidArgumentException("Unknown target state: $targetState");
+        }
+
+        foreach ($stateProgression[$targetState] as $state) {
+            $jobManager->set_state($this->testJobId, $state);
+        }
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -124,12 +151,7 @@ class ApiTest extends TestCase
     public function test_db_export_success(): void
     {
         // Set up job in correct state for db_export (files_pass1)
-        $reflection = new \ReflectionClass($this->api);
-        $jobManagerProperty = $reflection->getProperty('jobs');
-        $jobManagerProperty->setAccessible(true);
-        $jobManager = $jobManagerProperty->getValue($this->api);
-        $jobManager->set_state($this->testJobId, 'preflight_ok');
-        $jobManager->set_state($this->testJobId, 'files_pass1');
+        $this->setupJobState('files_pass1');
 
         $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/db/export', '', $this->peerUrl);
 
@@ -224,14 +246,7 @@ class ApiTest extends TestCase
     public function test_command_db_import_success(): void
     {
         // Set up job in correct state for db_import (db_uploaded)
-        $reflection = new \ReflectionClass($this->api);
-        $jobManagerProperty = $reflection->getProperty('jobs');
-        $jobManagerProperty->setAccessible(true);
-        $jobManager = $jobManagerProperty->getValue($this->api);
-        $jobManager->set_state($this->testJobId, 'preflight_ok');
-        $jobManager->set_state($this->testJobId, 'files_pass1');
-        $jobManager->set_state($this->testJobId, 'db_exported');
-        $jobManager->set_state($this->testJobId, 'db_uploaded');
+        $this->setupJobState('db_uploaded');
 
         $params = ['action' => 'db_import', 'job_id' => $this->testJobId, 'params' => ['artifact' => 'test-import.sql.zst']];
         $body = wp_json_encode($params);
@@ -268,15 +283,7 @@ class ApiTest extends TestCase
     public function test_command_search_replace_success(): void
     {
         // Set up job in correct state for search_replace (db_imported)
-        $reflection = new \ReflectionClass($this->api);
-        $jobManagerProperty = $reflection->getProperty('jobs');
-        $jobManagerProperty->setAccessible(true);
-        $jobManager = $jobManagerProperty->getValue($this->api);
-        $jobManager->set_state($this->testJobId, 'preflight_ok');
-        $jobManager->set_state($this->testJobId, 'files_pass1');
-        $jobManager->set_state($this->testJobId, 'db_exported');
-        $jobManager->set_state($this->testJobId, 'db_uploaded');
-        $jobManager->set_state($this->testJobId, 'db_imported');
+        $this->setupJobState('db_imported');
 
         $config = [
             'mode' => 'hybrid',
