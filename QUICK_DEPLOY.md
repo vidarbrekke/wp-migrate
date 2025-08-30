@@ -10,17 +10,17 @@ Your deployment package is ready: **`wp-migrate-plugin-staging.tar.gz`**
 
 ### **Step 1: Upload to Staging**
 ```bash
-# Replace with your actual staging server details
-scp wp-migrate-plugin-staging.tar.gz username@your-staging-server.com:/path/to/wordpress/wp-content/plugins/
+# Using the actual staging server details
+scp -i /Users/vidarbrekke/Dev/socialintent/staging.motherknitter.pem wp-migrate-plugin-staging.tar.gz staging@45.33.31.79:/home/staging/public_html/wp-content/plugins/
 ```
 
 ### **Step 2: Extract & Install**
 ```bash
 # SSH into your staging server
-ssh username@your-staging-server.com
+ssh -i /Users/vidarbrekke/Dev/socialintent/staging.motherknitter.pem staging@45.33.31.79
 
 # Extract plugin
-cd /path/to/wordpress/wp-content/plugins/
+cd /home/staging/public_html/wp-content/plugins/
 tar -xzf wp-migrate-plugin-staging.tar.gz
 
 # Set permissions
@@ -53,7 +53,7 @@ composer install
 | **Staging** | 0 failures | 🎯 Target |
 
 ### **Why Staging Will Work**
-- ✅ **Real WordPress classes** available
+- ✅ **Real WordPress classes** available (no more mocking issues)
 - ✅ **Proper environment** for testing
 - ✅ **No mock limitations** 
 - ✅ **Production-like conditions**
@@ -63,13 +63,13 @@ composer install
 ## 🧪 **Test Commands**
 
 ```bash
-# Full test suite
+# Full validation
 ./run-tests.sh all
 
-# Critical tests only
+# Critical path only
 ./run-tests.sh critical
 
-# Security tests only  
+# Security validation
 ./run-tests.sh security
 
 # Coverage reports
@@ -113,15 +113,26 @@ wp core version
 
 ---
 
+## 🔗 **Server Details**
+
+- **Server**: `45.33.31.79`
+- **User**: `staging`
+- **SSH Key**: `/Users/vidarbrekke/Dev/socialintent/staging.motherknitter.pem`
+- **WordPress Path**: `/home/staging/public_html/`
+- **Plugin Path**: `/home/staging/public_html/wp-content/plugins/mk-wc-plugin-starter/`
+- **Admin URL**: `http://45.33.31.79/wp-admin/`
+
+---
+
 ## 🔗 **Files Ready for Deployment**
 
 - **Plugin**: `wp-migrate-plugin-staging.tar.gz` (1.2MB)
-- **Deployment Script**: `deploy-to-staging.sh`
+- **Deployment Script**: `deploy-to-staging.sh` (✅ Updated with credentials)
 - **Full Guide**: `STAGING_DEPLOYMENT.md`
-- **Quick Guide**: `QUICK_DEPLOY.md`
+- **Quick Guide**: `QUICK_DEPLOY.md` (✅ Updated with credentials)
 
 ---
 
 **🎯 Goal: Deploy to staging and achieve 100% test success! 🚀✨**
 
-**Next: Upload package and run tests on your staging server**
+**Next: Run the automated deployment script or use the manual commands above**

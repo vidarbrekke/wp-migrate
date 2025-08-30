@@ -12,10 +12,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration - UPDATE THESE VALUES
-STAGING_SERVER="your-staging-server.com"
-STAGING_USER="your-username"
-STAGING_PATH="/path/to/wordpress/wp-content/plugins"
+# Configuration - UPDATED WITH ACTUAL STAGING SERVER DETAILS
+STAGING_SERVER="45.33.31.79"
+STAGING_USER="staging"
+STAGING_SSH_KEY="/Users/vidarbrekke/Dev/socialintent/staging.motherknitter.pem"
+STAGING_PATH="/home/staging/public_html/wp-content/plugins"
 PLUGIN_NAME="mk-wc-plugin-starter"
 
 # Functions
@@ -45,11 +46,22 @@ check_package() {
     print_success "Deployment package found: wp-migrate-plugin-staging.tar.gz"
 }
 
+# Check if SSH key exists
+check_ssh_key() {
+    if [ ! -f "$STAGING_SSH_KEY" ]; then
+        print_error "SSH key not found: $STAGING_SSH_KEY"
+        print_error "Please ensure the staging SSH key is available"
+        exit 1
+    fi
+    chmod 600 "$STAGING_SSH_KEY"
+    print_success "SSH key found and permissions set: $STAGING_SSH_KEY"
+}
+
 # Upload package to staging server
 upload_package() {
     print_status "Uploading deployment package to staging server..."
     
-    if scp wp-migrate-plugin-staging.tar.gz "$STAGING_USER@$STAGING_SERVER:$STAGING_PATH/"; then
+    if scp -i "$STAGING_SSH_KEY" wp-migrate-plugin-staging.tar.gz "$STAGING_USER@$STAGING_SERVER:$STAGING_PATH/"; then
         print_success "Package uploaded successfully"
     else
         print_error "Failed to upload package"
@@ -61,13 +73,13 @@ upload_package() {
 deploy_on_staging() {
     print_status "Deploying plugin on staging server..."
     
-    ssh "$STAGING_USER@$STAGING_SERVER" << 'EOF'
+    ssh -i "$STAGING_SSH_KEY" "$STAGING_USER@$STAGING_SERVER" << 'EOF'
         set -e
         
         echo "🚀 Starting deployment on staging server..."
         
         # Navigate to plugins directory
-        cd /path/to/wordpress/wp-content/plugins/
+        cd /home/staging/public_html/wp-content/plugins/
         
         # Backup existing plugin if it exists
         if [ -d "mk-wc-plugin-starter" ]; then
@@ -109,12 +121,12 @@ EOF
 run_staging_tests() {
     print_status "Running tests on staging server..."
     
-    ssh "$STAGING_USER@$STAGING_SERVER" << 'EOF'
+    ssh -i "$STAGING_SSH_KEY" "$STAGING_USER@$STAGING_SERVER" << 'EOF'
         set -e
         
         echo "🧪 Running tests on staging server..."
         
-        cd /path/to/wordpress/wp-content/plugins/mk-wc-plugin-starter/
+        cd /home/staging/public_html/wp-content/plugins/mk-wc-plugin-starter/
         
         # Check if tests directory exists
         if [ ! -d "tests" ]; then
@@ -139,18 +151,17 @@ main() {
     echo "🚀 WP-Migrate Plugin - Staging Deployment"
     echo "=========================================="
     echo ""
-    
-    # Check configuration
-    if [ "$STAGING_SERVER" = "your-staging-server.com" ]; then
-        print_error "Please update the configuration variables in this script:"
-        print_error "  - STAGING_SERVER"
-        print_error "  - STAGING_USER"
-        print_error "  - STAGING_PATH"
-        exit 1
-    fi
+    echo "🎯 Target Server: $STAGING_SERVER"
+    echo "👤 User: $STAGING_USER"
+    echo "🔑 SSH Key: $STAGING_SSH_KEY"
+    echo "📁 Path: $STAGING_PATH"
+    echo ""
     
     # Check package
     check_package
+    
+    # Check SSH key
+    check_ssh_key
     
     # Upload package
     upload_package
@@ -173,6 +184,9 @@ main() {
     echo "  ./run-tests.sh all          # All tests with coverage"
     echo "  ./run-tests.sh critical     # Critical path only"
     echo "  ./run-tests.sh security     # Security tests only"
+    echo ""
+    echo "🌐 WordPress Admin: http://45.33.31.79/wp-admin/"
+    echo "🔑 Login with your WordPress admin credentials"
 }
 
 # Run main function
