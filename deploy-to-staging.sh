@@ -92,11 +92,17 @@ deploy_on_staging() {
 
         # Remove old plugin completely to ensure clean extraction
         echo "🗑️  Removing any existing plugin files..."
-        rm -rf wp-migrate/
+        rm -rf wp-migrate/ "a:www-data wp-migrate"/ ._wp-migrate* wp-migrate.php
 
-        # Extract new plugin
-        echo "📂 Extracting new plugin version..."
-        unzip -q wp-migrate-plugin-staging.zip
+        # Create plugin directory and extract into it
+        echo "📂 Creating plugin directory and extracting..."
+        mkdir -p wp-migrate
+        if unzip -o -q wp-migrate-plugin-staging.zip -d wp-migrate/; then
+            echo "✅ Plugin extracted successfully"
+        else
+            echo "❌ Plugin extraction failed"
+            exit 1
+        fi
 
         # Verify plugin structure
         if [ ! -f "wp-migrate/wp-migrate.php" ]; then
