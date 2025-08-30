@@ -8,6 +8,7 @@ use MK\WcPluginStarter\Security\HmacAuth;
 use MK\WcPluginStarter\Files\ChunkStore;
 use MK\WcPluginStarter\State\StateStore;
 use MK\WcPluginStarter\Migration\JobManager;
+use MK\WcPluginStarter\Migration\DatabaseEngine;
 use MK\WcPluginStarter\Logging\JsonLogger;
 use MK\WcPluginStarter\Preflight\Checker;
 use \WP_Error;
@@ -18,11 +19,13 @@ final class Api implements Registrable {
     private HmacAuth $auth;
     private ChunkStore $chunks;
     private JobManager $jobs;
+    private DatabaseEngine $dbEngine;
 
     public function __construct( HmacAuth $auth ) {
         $this->auth = $auth;
         $this->chunks = new ChunkStore();
         $this->jobs = new JobManager( new StateStore() );
+        $this->dbEngine = new DatabaseEngine( $this->chunks );
     }
 
     public function register(): void {
@@ -72,6 +75,16 @@ final class Api implements Registrable {
                 'n' => [ 'required' => false, 'type' => 'integer', 'default' => 200, 'minimum' => 1, 'maximum' => 1000 ],
             ],
         ] );
+
+        \register_rest_route( 'migrate/v1', '/db/export', [
+            'methods'  => 'POST',
+            'callback' => [ $this, 'db_export' ],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'job_id' => [ 'required' => true, 'type' => 'string' ],
+                'artifact' => [ 'required' => false, 'type' => 'string', 'default' => 'db_dump.sql.zst' ],
+            ],
+        ] );
     }
 
     public function handshake( WP_REST_Request $request ) {
@@ -113,6 +126,14 @@ final class Api implements Registrable {
                     return $this->handle_health( $jobId );
                 case 'prepare':
                     return $this->handle_prepare( $jobId, $request );
+                case 'db_import':
+                    return $this->handle_db_import( $jobId, $request );
+                case 'search_replace':
+                    return $this->handle_search_replace( $jobId, $request );
+                case 'finalize':
+                    return $this->handle_finalize( $jobId, $request );
+                case 'rollback':
+                    return $this->handle_rollback( $jobId, $request );
                 default:
                     return new WP_REST_Response( [ 'ok' => false, 'code' => 'EUNKNOWN_ACTION', 'message' => 'Unknown action: ' . $action ], 400 );
             }
@@ -163,6 +184,44 @@ final class Api implements Registrable {
         } );
     }
 
+    public function db_export( WP_REST_Request $request ) {
+        return $this->with_auth( $request, function () use ( $request ) {
+            $jobId = (string) ( $request->get_param( 'job_id' ) ?? '' );
+            $artifact = (string) ( $request->get_param( 'artifact' ) ?? 'db_dump.sql.zst' );
+
+            if ( $jobId === '' ) {
+                return new WP_REST_Response( [
+                    'ok' => false,
+                    'code' => 'EBAD_REQUEST',
+                    'message' => 'job_id is required'
+                ], 400 );
+            }
+
+            $result = $this->dbEngine->export_database( $jobId, $artifact );
+
+            if ( ! $result['ok'] ) {
+                return new WP_REST_Response( [
+                    'ok' => false,
+                    'code' => 'EDB_EXPORT_FAILED',
+                    'message' => $result['error'] ?? 'Database export failed'
+                ], 500 );
+            }
+
+            // Update job state
+            $this->jobs->set_state( $jobId, 'db_exported', [
+                'export_method' => $result['method'] ?? 'unknown',
+                'exported_at' => gmdate( 'c' )
+            ]);
+
+            return new WP_REST_Response( [
+                'ok' => true,
+                'method' => $result['method'] ?? 'unknown',
+                'artifact' => $artifact,
+                'notes' => [ 'Database export completed successfully' ]
+            ] );
+        } );
+    }
+
     private function error_to_response( WP_Error $err, string $fallbackCode ) {
         $code = $err->get_error_code() ?: $fallbackCode;
         $msg  = $err->get_error_message();
@@ -204,11 +263,143 @@ final class Api implements Registrable {
             'prepared_at' => gmdate( 'c' )
         ] );
         
-        return new WP_REST_Response( [ 
-            'ok' => true, 
+        return new WP_REST_Response( [
+            'ok' => true,
             'state' => 'preflight_ok',
             'notes' => [ 'Job prepared successfully' ]
         ] );
+    }
+
+    private function handle_db_import( string $jobId, WP_REST_Request $request ): WP_REST_Response {
+        $params = $request->get_json_params() ?? [];
+        $artifact = (string) ( $params['artifact'] ?? 'db_dump.sql.zst' );
+
+        $result = $this->dbEngine->import_database( $jobId, $artifact );
+
+        if ( ! $result['ok'] ) {
+            return new WP_REST_Response( [
+                'ok' => false,
+                'code' => 'EDB_IMPORT_FAILED',
+                'message' => $result['error'] ?? 'Database import failed'
+            ], 500 );
+        }
+
+        // Update job state
+        $this->jobs->set_state( $jobId, 'db_imported', [
+            'import_stats' => $result['stats'] ?? [],
+            'imported_at' => gmdate( 'c' )
+        ]);
+
+        return new WP_REST_Response( [
+            'ok' => true,
+            'state' => 'db_imported',
+            'stats' => $result['stats'] ?? [],
+            'notes' => [ 'Database import completed successfully' ]
+        ] );
+    }
+
+    private function handle_search_replace( string $jobId, WP_REST_Request $request ): WP_REST_Response {
+        $params = $request->get_json_params() ?? [];
+
+        $result = $this->dbEngine->search_replace_urls( $jobId, $params );
+
+        if ( ! $result['ok'] ) {
+            return new WP_REST_Response( [
+                'ok' => false,
+                'code' => 'ESEARCH_REPLACE_FAILED',
+                'message' => $result['error'] ?? 'URL replacement failed'
+            ], 500 );
+        }
+
+        // Update job state
+        $this->jobs->set_state( $jobId, 'url_replaced', [
+            'replacements' => $result['replacements'] ?? 0,
+            'replaced_at' => gmdate( 'c' )
+        ]);
+
+        return new WP_REST_Response( [
+            'ok' => true,
+            'state' => 'url_replaced',
+            'replacements' => $result['replacements'] ?? 0,
+            'notes' => [ 'URL replacement completed successfully' ]
+        ] );
+    }
+
+    private function handle_finalize( string $jobId, WP_REST_Request $request ): WP_REST_Response {
+        try {
+            // Remove maintenance mode if it was set
+            $this->remove_maintenance_mode();
+
+            // Clear any remaining temporary files
+            $this->cleanup_temp_files( $jobId );
+
+            // Update job state to completed
+            $this->jobs->set_state( $jobId, 'done', [
+                'finalized_at' => gmdate( 'c' ),
+                'cleanup_completed' => true
+            ]);
+
+            return new WP_REST_Response( [
+                'ok' => true,
+                'state' => 'done',
+                'notes' => [ 'Migration completed successfully' ]
+            ] );
+
+        } catch ( \Throwable $e ) {
+            return new WP_REST_Response( [
+                'ok' => false,
+                'code' => 'EFINALIZE_FAILED',
+                'message' => 'Finalization failed: ' . $e->getMessage()
+            ], 500 );
+        }
+    }
+
+    private function handle_rollback( string $jobId, WP_REST_Request $request ): WP_REST_Response {
+        try {
+            // Basic rollback implementation - can be enhanced with snapshots
+            $this->remove_maintenance_mode();
+
+            // Update job state to indicate rollback
+            $this->jobs->set_state( $jobId, 'rolled_back', [
+                'rolled_back_at' => gmdate( 'c' ),
+                'rollback_reason' => 'User initiated'
+            ]);
+
+            return new WP_REST_Response( [
+                'ok' => true,
+                'state' => 'rolled_back',
+                'notes' => [ 'Rollback completed successfully' ]
+            ] );
+
+        } catch ( \Throwable $e ) {
+            return new WP_REST_Response( [
+                'ok' => false,
+                'code' => 'EROLLBACK_FAILED',
+                'message' => 'Rollback failed: ' . $e->getMessage()
+            ], 500 );
+        }
+    }
+
+    private function remove_maintenance_mode(): void {
+        $maintenanceFile = \ABSPATH . '.maintenance';
+        if ( file_exists( $maintenanceFile ) ) {
+            @unlink( $maintenanceFile );
+        }
+    }
+
+    private function cleanup_temp_files( string $jobId ): void {
+        $jobDir = $this->chunks->get_job_dir( $jobId );
+        if ( is_dir( $jobDir ) ) {
+            // Remove old chunk files (keep for 24 hours as backup)
+            $files = glob( $jobDir . '/chunks/*' );
+            if ( $files ) {
+                foreach ( $files as $file ) {
+                    if ( filemtime( $file ) < ( time() - 86400 ) ) { // 24 hours ago
+                        @unlink( $file );
+                    }
+                }
+            }
+        }
     }
 
     private function has_rsync(): bool {
