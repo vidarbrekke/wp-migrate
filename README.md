@@ -98,14 +98,10 @@ curl -X POST https://your-site.com/wp-json/migrate/v1/handshake \
 
 ### Code Quality
 ```bash
-# Static analysis
-composer run analyze
-
-# Code standards
-composer run lint
-
 # Autoloader
 composer run autoload
+
+# Note: Static analysis and code standards tools are planned for future phases
 ```
 
 ### Adding Features

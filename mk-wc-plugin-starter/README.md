@@ -107,9 +107,9 @@ The plugin exposes REST endpoints at `/wp-json/migrate/v1/`:
 ## 🔧 Development
 
 ### Code Quality
-- **PHPStan**: Static analysis (level 5)
-- **PHPCS**: WordPress coding standards
 - **PSR-4**: Autoloading standards
+- **WordPress Standards**: Follow WordPress coding standards and best practices
+- **Note**: Static analysis (PHPStan) and code standards (PHPCS) are planned for future phases
 
 ### Adding Features
 1. Create class implementing `Registrable`
@@ -118,11 +118,8 @@ The plugin exposes REST endpoints at `/wp-json/migrate/v1/`:
 
 ### Testing
 ```bash
-# Run PHPStan analysis
-./vendor/bin/phpstan analyse
-
-# Run PHPCS checks
-./vendor/bin/phpcs src/
+# Note: Automated testing suite is planned for future phases
+# Current testing: Manual validation via REST endpoints
 ```
 
 ## 🚧 Current Status
