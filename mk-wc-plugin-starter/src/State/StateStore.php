@@ -3,7 +3,7 @@ namespace WpMigrate\State;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-final class StateStore {
+class StateStore {
 	private const OPTION_PREFIX = 'mig_job_';
 
 	/** @return array<string,mixed> */

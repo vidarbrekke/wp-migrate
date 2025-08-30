@@ -4,7 +4,7 @@ namespace WpMigrate\Files;
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class ChunkStore {
-	private const MAX_CHUNK_SIZE = 64 * 1024 * 1024; // 64MB
+	public const MAX_CHUNK_SIZE = 64 * 1024 * 1024; // 64MB
 	private string $baseDir;
 
 	public function __construct() {

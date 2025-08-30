@@ -154,8 +154,13 @@ main() {
     
     # Step 2: Staging Handshake
     log_step "Step 2: Staging Handshake"
-    log_warning "EXPECTED: Staging handshake will fail until shared key is configured on staging site"
-    test_results+=("Staging Handshake: ⚠️ EXPECTED FAILURE")
+    local staging_handshake_body="{\"job_id\":\"$JOB_ID\",\"capabilities\":{\"rsync\":true,\"mysql\":true}}"
+    if test_endpoint "$STAGING_URL" "POST" "/wp-json/migrate/v1/handshake" "$staging_handshake_body" "$PRODUCTION_URL" "Staging Handshake"; then
+        test_results+=("Staging Handshake: ✅ PASS")
+    else
+        test_results+=("Staging Handshake: ❌ FAIL")
+        overall_success=false
+    fi
     
     # Step 3: Check Job Status
     log_step "Step 3: Check Job Status"
@@ -198,7 +203,7 @@ main() {
     done
     
     echo ""
-    # Check if all critical tests passed (excluding expected failures and skips)
+    # Check if all critical tests passed (excluding skips)
     local critical_tests_passed=true
     for result in "${test_results[@]}"; do
         if [[ "$result" == *"❌ FAIL"* ]]; then
@@ -218,10 +223,10 @@ main() {
         echo "   • Database export ready"
         echo ""
         echo "📋 Next steps:"
-        echo "   1. Configure shared keys in both WordPress admin panels"
-        echo "   2. Set up peer URLs for cross-site communication"
-        echo "   3. Perform actual migration from production to staging"
-        echo "   4. Monitor real-time progress during migration"
+        echo "   1. ✅ Shared keys configured on both sites"
+        echo "   2. ✅ Peer URLs configured for cross-site communication"
+        echo "   3. 🚀 Perform actual migration from production to staging"
+        echo "   4. 📊 Monitor real-time progress during migration"
     else
         log_error "⚠️  SOME CRITICAL TESTS FAILED - Migration system needs attention"
         echo ""

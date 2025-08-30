@@ -169,7 +169,7 @@ final class JobManager {
 	/**
 	 * Calculate progress percentage based on state
 	 */
-	private function calculate_progress( string $state ): int {
+	protected function calculate_progress( string $state ): int {
 		$progressMap = [
 			'created' => 0,
 			'preflight_ok' => 10,

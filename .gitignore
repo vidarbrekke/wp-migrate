@@ -1,0 +1,41 @@
+# Dependencies
+vendor/
+composer.lock
+
+# Test artifacts
+.phpunit.cache/
+reports/
+coverage/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build artifacts
+*.zip
+*.tar.gz
+
+# Environment files
+.env
+.env.local
+
+# WordPress specific
+wp-config.php
+wp-content/uploads/
+wp-content/plugins/*/vendor/
+wp-content/plugins/*/.phpunit.cache/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Legacy files (keep for reference but don't track)
+*.legacy

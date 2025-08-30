@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+    bootstrap="tests/bootstrap.php"
+    cacheResultFile=".phpunit.cache/test-results"
+    executionOrder="depends,defects"
+    failOnRisky="true"
+    failOnWarning="true"
+    beStrictAboutOutputDuringTests="true"
+    beStrictAboutTodoAnnotatedTests="true"
+    convertDeprecationsToExceptions="true"
+    colors="true"
+    verbose="true">
+
+    <php>
+        <const name="WP_MIGRATE_VERSION" value="1.0.0"/>
+        <const name="WP_MIGRATE_FILE" value="/tmp/wp-migrate.php"/>
+        <const name="WP_MIGRATE_DIR" value="/tmp/"/>
+        <const name="WP_MIGRATE_URL" value="http://example.com/wp-content/plugins/wp-migrate/"/>
+        <const name="ABSPATH" value="/tmp/wordpress/"/>
+    </php>
+
+    <testsuites>
+        <testsuite name="unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="security">
+            <directory>tests/Security</directory>
+        </testsuite>
+        <testsuite name="functional">
+            <directory>tests/Functional</directory>
+        </testsuite>
+    </testsuites>
+
+    <coverage>
+        <include>
+            <directory suffix=".php">src/</directory>
+        </include>
+        <exclude>
+            <directory>src/vendor</directory>
+        </exclude>
+        <report>
+            <html outputDirectory="coverage"/>
+            <text outputFile="php://stdout"/>
+        </report>
+    </coverage>
+
+    <logging>
+        <junit outputFile="reports/junit.xml"/>
+    </logging>
+</phpunit>
