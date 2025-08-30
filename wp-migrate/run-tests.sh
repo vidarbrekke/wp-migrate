@@ -94,6 +94,28 @@ run_performance_tests() {
         "$@"
 }
 
+# Function to fix permissions for executable files
+fix_executable_permissions() {
+    print_status "Checking and fixing executable permissions..."
+
+    # Fix vendor/bin executables
+    if [ -d "vendor/bin" ]; then
+        local executables=$(find vendor/bin -type f -executable | wc -l)
+        local total_files=$(find vendor/bin -type f | wc -l)
+
+        if [ "$total_files" -gt 0 ]; then
+            chmod +x vendor/bin/* 2>/dev/null
+            print_success "Fixed permissions for vendor/bin executables"
+        fi
+    fi
+
+    # Ensure this script itself is executable
+    if [ ! -x "$0" ]; then
+        chmod +x "$0"
+        print_success "Fixed permissions for test runner script"
+    fi
+}
+
 # Function to check test environment
 check_environment() {
     print_status "Checking test environment..."
@@ -111,6 +133,17 @@ check_environment() {
     if [ ! -f "vendor/bin/phpunit" ]; then
         print_error "PHPUnit not found. Run 'composer install' first."
         exit 1
+    fi
+
+    # Ensure PHPUnit is executable
+    if [ ! -x "vendor/bin/phpunit" ]; then
+        print_warning "PHPUnit is not executable. Fixing permissions..."
+        if chmod +x vendor/bin/phpunit; then
+            print_success "PHPUnit permissions fixed"
+        else
+            print_error "Could not fix PHPUnit permissions. Please run: chmod +x vendor/bin/phpunit"
+            exit 1
+        fi
     fi
 
     # Check if Xdebug is available (optional)
@@ -229,7 +262,8 @@ main() {
             clean_test_artifacts
             exit 0
             ;;
-        all)
+                all)
+            fix_executable_permissions
             check_environment
             if [ -z "$NO_COVERAGE" ]; then
                 run_with_coverage "${phpunit_args[@]}"
@@ -238,18 +272,22 @@ main() {
             fi
             ;;
         critical)
+            fix_executable_permissions
             check_environment
             run_critical_tests "${phpunit_args[@]}"
             ;;
         security)
+            fix_executable_permissions
             check_environment
             run_security_tests "${phpunit_args[@]}"
             ;;
         integration)
+            fix_executable_permissions
             check_environment
             run_integration_tests "${phpunit_args[@]}"
             ;;
         performance)
+            fix_executable_permissions
             check_environment
             run_performance_tests "${phpunit_args[@]}"
             ;;

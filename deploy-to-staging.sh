@@ -142,6 +142,22 @@ deploy_on_staging() {
         # Navigate to plugin directory for post-deployment tasks
         cd wp-migrate/
 
+        # Fix permissions for executable files (critical for testing)
+        echo "🔧 Fixing permissions for executable files..."
+        if [ -d "vendor/bin" ]; then
+            chmod +x vendor/bin/* 2>/dev/null || echo "⚠️  Could not set permissions on all vendor/bin files"
+            if [ -f "vendor/bin/phpunit" ]; then
+                chmod +x vendor/bin/phpunit
+                echo "✅ PHPUnit executable permissions fixed"
+            fi
+        fi
+
+        # Make sure run-tests.sh is executable
+        if [ -f "run-tests.sh" ]; then
+            chmod +x run-tests.sh
+            echo "✅ Test runner permissions fixed"
+        fi
+
         # Skip composer for pure WordPress plugins
         echo "📦 Pure WordPress plugin - no external dependencies needed"
 
@@ -176,14 +192,44 @@ run_staging_tests() {
         
         # Run full test suite (if available)
         echo "🧪 Checking test environment..."
-        if [ -f "run-tests.sh" ] && [ -d "tests" ]; then
+        if [ -f "run-tests.sh" ] && [ -d "tests" ] && [ -d "vendor" ]; then
+            # Pre-flight checks for test environment
+            echo "🔍 Validating test environment..."
+
+            if ! command -v php >/dev/null 2>&1; then
+                echo "❌ PHP not found - cannot run tests"
+                exit 1
+            fi
+
+            if ! command -v composer >/dev/null 2>&1; then
+                echo "⚠️  Composer not found - this may affect test execution"
+            fi
+
+            echo "✅ Test environment validated"
             echo "🔐 Running security tests first..."
-            ./run-tests.sh security
+            if ./run-tests.sh security; then
+                echo "✅ Security tests passed"
+            else
+                echo "⚠️  Security tests failed - please investigate"
+            fi
 
             echo "🚀 Running all tests with coverage..."
-            ./run-tests.sh all
+            if ./run-tests.sh all; then
+                echo "✅ All tests passed successfully!"
 
-            echo "📊 Test results available in tests/coverage/html/"
+                # Show summary of test results
+                if [ -f "tests/results/testdox.txt" ]; then
+                    echo "📊 Test Summary:"
+                    tail -5 tests/results/testdox.txt 2>/dev/null || echo "   (Test results generated)"
+                fi
+
+                echo "📊 Test results available in tests/coverage/html/"
+                echo "🌐 View coverage report: tests/coverage/html/index.html"
+            else
+                echo "❌ Some tests failed - please check the output above"
+                echo "💡 You can investigate locally with: ./run-tests.sh --verbose all"
+                exit 1
+            fi
         else
             echo "ℹ️  Test suite not deployed (production deployment)"
             echo "💡 Run tests locally: ./run-tests.sh all"
