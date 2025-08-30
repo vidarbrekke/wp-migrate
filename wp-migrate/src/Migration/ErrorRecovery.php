@@ -9,6 +9,8 @@ interface RetryConfigInterface {
     public function getMaxRetries(): int;
     public function getBaseBackoffSeconds(): int;
     public function getMaxBackoffSeconds(): int;
+    public function getLogTailLimit(): int;
+    public function getRecentLogsLimit(): int;
 }
 
 final class DefaultRetryConfig implements RetryConfigInterface {
@@ -23,22 +25,30 @@ final class DefaultRetryConfig implements RetryConfigInterface {
     public function getMaxBackoffSeconds(): int {
         return 900;
     }
+
+    public function getLogTailLimit(): int {
+        return 1000;
+    }
+
+    public function getRecentLogsLimit(): int {
+        return 50;
+    }
 }
 
 final class ErrorRecovery {
-    private const DEFAULT_MAX_RETRIES = 3;
-    private const DEFAULT_BASE_BACKOFF_SECONDS = 30; // 30 seconds
-    private const DEFAULT_MAX_BACKOFF_SECONDS = 900; // 15 minutes
-
     private int $maxRetries;
     private int $baseBackoffSeconds;
     private int $maxBackoffSeconds;
+    private int $logTailLimit;
+    private int $recentLogsLimit;
 
     public function __construct( ?RetryConfigInterface $config = null ) {
         $config = $config ?? new DefaultRetryConfig();
         $this->maxRetries = $config->getMaxRetries();
         $this->baseBackoffSeconds = $config->getBaseBackoffSeconds();
         $this->maxBackoffSeconds = $config->getMaxBackoffSeconds();
+        $this->logTailLimit = $config->getLogTailLimit();
+        $this->recentLogsLimit = $config->getRecentLogsLimit();
     }
 
     /**
@@ -172,7 +182,7 @@ final class ErrorRecovery {
      */
     public function get_retry_stats( string $jobId ): array {
         $logger = new JsonLogger( $jobId );
-        $logs = $logger->tail( 1000 ); // Get recent logs
+        $logs = $logger->tail( $this->logTailLimit ); // Get recent logs
 
         $stats = [
             'total_retries' => 0,
@@ -219,7 +229,7 @@ final class ErrorRecovery {
             return false;
         }
 
-        $recentErrors = array_slice( $job['errors'], -5 ); // Last 5 errors
+        $recentErrors = array_slice( $job['errors'], -$this->recentLogsLimit ); // Last N errors
         $recoverableCount = 0;
 
         foreach ( $recentErrors as $error ) {

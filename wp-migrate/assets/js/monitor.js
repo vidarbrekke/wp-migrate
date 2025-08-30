@@ -66,6 +66,29 @@
 
             // Disable emergency buttons
             $('.emergency-stop-btn, .emergency-rollback-btn').prop('disabled', true);
+            
+            // Clean up any pending operations
+            this.cleanup();
+        },
+
+        cleanup: function() {
+            // Stop polling
+            this.stopPolling();
+            
+            // Clear any pending timeouts
+            if (this.refreshTimeout) {
+                clearTimeout(this.refreshTimeout);
+                this.refreshTimeout = null;
+            }
+            
+            // Clear any pending AJAX requests
+            if (this.currentAjaxRequest) {
+                this.currentAjaxRequest.abort();
+                this.currentAjaxRequest = null;
+            }
+            
+            // Reset connection status
+            this.updateConnectionStatus(false);
         },
 
         startPolling: function() {

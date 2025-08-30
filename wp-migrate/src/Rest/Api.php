@@ -259,7 +259,7 @@ final class Api implements Registrable {
 
             // Get recent logs since timestamp
             $logger = new JsonLogger( $jobId );
-            $recentLogs = $logger->tail( 50 ); // Get last 50 log entries
+            $recentLogs = $logger->tail( 50 ); // Get last 50 log entries - TODO: Use config-driven value
 
             // Filter logs by timestamp if since is provided
             if ( $since > 0 ) {
