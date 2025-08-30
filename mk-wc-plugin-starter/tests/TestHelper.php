@@ -93,17 +93,35 @@ class TestHelper
             $request->set_header($key, $value);
         }
 
-        // Set body
+        // Set body and parse JSON if it's JSON
         if (!empty($body)) {
             $request->set_body($body);
+            // If body looks like JSON, parse it for get_json_params()
+            if (self::isJson($body)) {
+                $jsonParams = json_decode($body, true);
+                if (is_array($jsonParams)) {
+                    foreach ($jsonParams as $key => $value) {
+                        $request->set_param($key, $value);
+                    }
+                }
+            }
         }
 
-        // Set query parameters
+        // Set query parameters (these override JSON params if they conflict)
         foreach ($params as $key => $value) {
             $request->set_param($key, $value);
         }
 
         return $request;
+    }
+
+    /**
+     * Check if string is valid JSON
+     */
+    private static function isJson(string $string): bool
+    {
+        json_decode($string);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 
     /**
@@ -132,7 +150,9 @@ class TestHelper
         string $peer = 'https://test.example.com',
         ?int $timestamp = null
     ): array {
-        $timestamp = $timestamp ?? (int) (microtime(true) * 1000);
+        // Generate timestamp that's guaranteed to be fresh and within skew tolerance
+        // Add a small buffer to account for test execution time
+        $timestamp = $timestamp ?? (int) ((microtime(true) + 1) * 1000); // Add 1 second buffer
         $nonce = bin2hex(random_bytes(8));
         $bodyHash = hash('sha256', $body);
 

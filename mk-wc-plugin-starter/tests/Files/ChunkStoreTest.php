@@ -252,7 +252,7 @@ class ChunkStoreTest extends TestCase
     }
 
     /**
-     * Test filename sanitization
+     * Test filename sanitization and security
      */
     public function test_filename_sanitization(): void
     {
@@ -261,16 +261,35 @@ class ChunkStoreTest extends TestCase
         $content = 'test content';
         $hash = base64_encode(hash('sha256', $content, true));
 
-        // This should work because sanitize_file_name handles the path
-        $this->chunkStore->save_chunk($this->testJobId, $maliciousArtifact, $index, $content, $hash);
+        // This should fail because even after sanitization, the path contains dangerous components
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid path component detected after sanitization');
 
-        // Verify the chunk was created with sanitized name
+        $this->chunkStore->save_chunk($this->testJobId, $maliciousArtifact, $index, $content, $hash);
+    }
+
+    /**
+     * Test safe filename sanitization
+     */
+    public function test_safe_filename_sanitization(): void
+    {
+        $safeArtifact = 'my-safe-file.txt';
+        $index = 0;
+        $content = 'test content';
+        $hash = base64_encode(hash('sha256', $content, true));
+
+        // This should work with a safe filename
+        $this->chunkStore->save_chunk($this->testJobId, $safeArtifact, $index, $content, $hash);
+
+        // Verify the chunk was created
         $chunkDir = $this->chunkStore->get_chunk_dir($this->testJobId);
         $files = scandir($chunkDir);
+        $this->assertIsArray($files, 'scandir should return an array');
+
         $chunkFiles = array_filter($files, fn($f) => !in_array($f, ['.', '..']));
 
         $this->assertCount(1, $chunkFiles);
-        $this->assertStringNotContainsString('..', $chunkFiles[0]);
+        $this->assertStringStartsWith('my-safe-file.txt', $chunkFiles[0] ?? '');
     }
 
     /**

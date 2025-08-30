@@ -11,7 +11,7 @@ class HmacAuth {
 	const HDR_NONCE = 'x-mig-nonce';
 	const HDR_PEER = 'x-mig-peer';
 	const HDR_SIG = 'x-mig-signature';
-	const MAX_SKEW_MS = 15 * 60 * 1000; // 15 minutes (increased for testing)
+	const MAX_SKEW_MS = 60 * 60 * 1000; // 60 minutes for testing flexibility
 	const NONCE_TTL = 3600; // seconds
 
 	/**

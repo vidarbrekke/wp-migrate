@@ -21,11 +21,11 @@ final class Api implements Registrable {
     private JobManager $jobs;
     private DatabaseEngine $dbEngine;
 
-    public function __construct( HmacAuth $auth ) {
+    public function __construct( HmacAuth $auth, ?ChunkStore $chunks = null, ?DatabaseEngine $dbEngine = null ) {
         $this->auth = $auth;
-        $this->chunks = new ChunkStore();
+        $this->chunks = $chunks ?? new ChunkStore();
         $this->jobs = new JobManager( new StateStore() );
-        $this->dbEngine = new DatabaseEngine( $this->chunks );
+        $this->dbEngine = $dbEngine ?? new DatabaseEngine( $this->chunks );
     }
 
     public function register(): void {
@@ -271,7 +271,10 @@ final class Api implements Registrable {
     }
 
     private function handle_db_import( string $jobId, WP_REST_Request $request ): WP_REST_Response {
-        $params = $request->get_json_params() ?? [];
+        $params = $request->get_param( 'params' ) ?? [];
+        if ( ! is_array( $params ) ) {
+            $params = [];
+        }
         $artifact = (string) ( $params['artifact'] ?? 'db_dump.sql.zst' );
 
         $result = $this->dbEngine->import_database( $jobId, $artifact );
@@ -299,7 +302,10 @@ final class Api implements Registrable {
     }
 
     private function handle_search_replace( string $jobId, WP_REST_Request $request ): WP_REST_Response {
-        $params = $request->get_json_params() ?? [];
+        $params = $request->get_param( 'params' ) ?? [];
+        if ( ! is_array( $params ) ) {
+            $params = [];
+        }
 
         $result = $this->dbEngine->search_replace_urls( $jobId, $params );
 

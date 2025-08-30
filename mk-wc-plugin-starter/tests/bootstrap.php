@@ -83,12 +83,19 @@ if ( ! function_exists( 'get_bloginfo' ) ) {
 
 if ( ! function_exists( 'get_option' ) ) {
     function get_option( $option, $default = false ) {
-        return $default;
+        return \MK\WcPluginStarter\Tests\TestHelper::get_option( $option, $default );
     }
 }
 
 if ( ! function_exists( 'update_option' ) ) {
     function update_option( $option, $value, $autoload = null ) {
+        return \MK\WcPluginStarter\Tests\TestHelper::update_option( $option, $value, $autoload );
+    }
+}
+
+if ( ! function_exists( 'delete_option' ) ) {
+    function delete_option( $option ) {
+        unset( \MK\WcPluginStarter\Tests\TestHelper::$options[$option] );
         return true;
     }
 }

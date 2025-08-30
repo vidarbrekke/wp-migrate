@@ -32,14 +32,24 @@ class ChunkStore {
 	}
 
 	public function chunk_path( string $jobId, string $artifact, int $index ): string {
-		$fname = \sanitize_file_name( $artifact ) . '.' . $index;
+		$sanitizedArtifact = \sanitize_file_name( $artifact );
+		// Ensure we have a valid filename after sanitization
+		if ( empty( $sanitizedArtifact ) ) {
+			$sanitizedArtifact = 'artifact_' . md5( $artifact );
+		}
+		$fname = $sanitizedArtifact . '.' . $index;
 		return $this->get_chunk_dir( $jobId ) . '/' . $fname;
 	}
 
 	/** @return array<int,int> */
 	public function list_present( string $jobId, string $artifact ): array {
 		$dir = $this->get_chunk_dir( $jobId );
-		$prefix = \sanitize_file_name( $artifact ) . '.';
+		$sanitizedArtifact = \sanitize_file_name( $artifact );
+		// Ensure we have a valid filename after sanitization
+		if ( empty( $sanitizedArtifact ) ) {
+			$sanitizedArtifact = 'artifact_' . md5( $artifact );
+		}
+		$prefix = $sanitizedArtifact . '.';
 		$present = [];
 		$dh = @\opendir( $dir );
 		if ( $dh ) {
@@ -62,8 +72,19 @@ class ChunkStore {
 		}
 
 		// Validate path components to prevent directory traversal
-		if ( strpos( $jobId, '..' ) !== false || strpos( $artifact, '..' ) !== false ) {
+		if ( strpos( $jobId, '..' ) !== false ) {
 			throw new \InvalidArgumentException( 'Invalid path component detected' );
+		}
+
+		// Sanitize artifact name and validate
+		$sanitizedArtifact = \sanitize_file_name( $artifact );
+		if ( empty( $sanitizedArtifact ) ) {
+			$sanitizedArtifact = 'artifact_' . md5( $artifact );
+		}
+
+		// Additional validation on sanitized artifact
+		if ( strpos( $sanitizedArtifact, '..' ) !== false ) {
+			throw new \InvalidArgumentException( 'Invalid path component detected after sanitization' );
 		}
 
 		// Validate hash
@@ -72,7 +93,7 @@ class ChunkStore {
 			throw new \RuntimeException( 'Chunk hash mismatch' );
 		}
 
-		$path = $this->chunk_path( $jobId, $artifact, $index );
+		$path = $this->chunk_path( $jobId, $sanitizedArtifact, $index );
 		\file_put_contents( $path, $rawBytes );
 	}
 }

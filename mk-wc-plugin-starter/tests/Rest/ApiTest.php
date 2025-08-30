@@ -51,19 +51,11 @@ class ApiTest extends TestCase
         $this->mockDbEngine = $this->createMock(DatabaseEngine::class);
         $this->mockChunkStore = $this->createMock(ChunkStore::class);
 
-        // Create API instance
-        $this->api = new Api($this->mockAuth);
+        // Create API instance with mocks
+        $this->api = new Api($this->mockAuth, $this->mockChunkStore, $this->mockDbEngine);
 
-        // Use reflection to inject mocks
+        // Inject JobManager with proper state store
         $reflection = new \ReflectionClass($this->api);
-        $chunkStoreProperty = $reflection->getProperty('chunks');
-        $chunkStoreProperty->setAccessible(true);
-        $chunkStoreProperty->setValue($this->api, $this->mockChunkStore);
-
-        $dbEngineProperty = $reflection->getProperty('dbEngine');
-        $dbEngineProperty->setAccessible(true);
-        $dbEngineProperty->setValue($this->api, $this->mockDbEngine);
-
         $jobManagerProperty = $reflection->getProperty('jobs');
         $jobManagerProperty->setAccessible(true);
         $jobManagerProperty->setValue($this->api, new JobManager(new StateStore()));
