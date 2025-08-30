@@ -12,12 +12,12 @@
   },
   "autoload": {
     "psr-4": {
-      "MK\\WcPluginStarter\\": "src/"
+      "WpMigrate\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "MK\\WcPluginStarter\\Tests\\": "tests/"
+      "WpMigrate\\Tests\\": "tests/"
     }
   },
   "scripts": {
