@@ -17,7 +17,7 @@ STAGING_SERVER="45.33.31.79"
 STAGING_USER="staging"
 STAGING_SSH_KEY="/Users/vidarbrekke/Dev/socialintent/staging.motherknitter.pem"
 STAGING_PATH="/home/staging/public_html/wp-content/plugins"
-PLUGIN_NAME="mk-wc-plugin-starter"
+PLUGIN_NAME="wp-migrate"
 
 # Functions
 print_status() {
@@ -82,9 +82,9 @@ deploy_on_staging() {
         cd /home/staging/public_html/wp-content/plugins/
         
         # Backup existing plugin if it exists
-        if [ -d "mk-wc-plugin-starter" ]; then
+        if [ -d "wp-migrate" ]; then
             echo "📦 Backing up existing plugin..."
-            mv mk-wc-plugin-starter mk-wc-plugin-starter.backup.$(date +%Y%m%d_%H%M%S)
+            mv wp-migrate wp-migrate.backup.$(date +%Y%m%d_%H%M%S)
         fi
         
         # Extract new plugin
@@ -93,9 +93,9 @@ deploy_on_staging() {
         
         # Set proper permissions
         echo "🔐 Setting permissions..."
-        find mk-wc-plugin-starter/ -type f -exec chmod 644 {} \;
-        find mk-wc-plugin-starter/ -type d -exec chmod 755 {} \;
-        chmod +x mk-wc-plugin-starter/run-tests.sh
+        find wp-migrate/ -type f -exec chmod 644 {} \;
+        find wp-migrate/ -type d -exec chmod 755 {} \;
+        chmod +x wp-migrate/run-tests.sh
         
         # Clean up package
         rm wp-migrate-plugin-staging.tar.gz
@@ -103,7 +103,7 @@ deploy_on_staging() {
         echo "✅ Plugin deployed successfully!"
         
         # Navigate to plugin directory
-        cd mk-wc-plugin-starter/
+        cd wp-migrate/
         
         # Install dependencies (including dev dependencies for testing)
         echo "📦 Installing dependencies..."
@@ -126,7 +126,7 @@ run_staging_tests() {
         
         echo "🧪 Running tests on staging server..."
         
-        cd /home/staging/public_html/wp-content/plugins/mk-wc-plugin-starter/
+        cd /home/staging/public_html/wp-content/plugins/wp-migrate/
         
         # Check if tests directory exists
         if [ ! -d "tests" ]; then

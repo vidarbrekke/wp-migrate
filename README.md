@@ -58,14 +58,14 @@ src/
 ### 1. Installation
 ```bash
 git clone https://github.com/vidarbrekke/wp-migrate.git
-cd wp-migrate/mk-wc-plugin-starter
+cd wp-migrate/wp-migrate
 composer install
 ```
 
 ### 2. WordPress Setup
-1. Copy `mk-wc-plugin-starter` to `wp-content/plugins/`
+1. Copy `wp-migrate` to `wp-content/plugins/`
 2. Activate **WP-Migrate: Production → Staging Migration**
-3. Go to **Settings → MK WC Starter**
+3. Go to **Settings → WP-Migrate**
 4. Configure shared key and peer URL
 
 ### 3. Basic Usage
@@ -117,9 +117,9 @@ composer run autoload
 
 ## 📚 Documentation
 
-- **[Plugin README](mk-wc-plugin-starter/README.md)** - Plugin-specific documentation
-- **[Architecture](mk-wc-plugin-starter/ARCHITECTURE.md)** - Technical design decisions
-- **[Implementation Status](mk-wc-plugin-starter/IMPLEMENTATION_STATUS.md)** - Current progress
+- **[Plugin README](wp-migrate/README.md)** - Plugin-specific documentation
+- **[Architecture](wp-migrate/ARCHITECTURE.md)** - Technical design decisions
+- **[Implementation Status](wp-migrate/IMPLEMENTATION_STATUS.md)** - Current progress
 - **[API Contract](api-contract-dry-yagni.md)** - REST API specification
 - **[Development Plan](dev-plan-dry-yagni.md)** - Implementation roadmap
 

@@ -111,17 +111,17 @@ finalized → done
 ### **Setup**
 ```bash
 git clone https://github.com/vidarbrekke/wp-migrate.git
-cd wp-migrate/mk-wc-plugin-starter
+cd wp-migrate/wp-migrate
 composer install
 ```
 
 ### **WordPress Integration**
-1. Copy `mk-wc-plugin-starter` to `wp-content/plugins/`
+1. Copy `wp-migrate` to `wp-content/plugins/`
 2. Activate **WP-Migrate: Production → Staging Migration**
-3. Configure shared key and peer URL in **Settings → MK WC Starter**
+3. Configure shared key and peer URL in **Settings → WP-Migrate**
 
 ### **Testing**
-- **Current**: 179 comprehensive tests with PHPUnit 10.x
+- **Current**: 100+ comprehensive tests with PHPUnit 10.x
 - **Coverage**: Security, core functionality, API endpoints
 - **Execution**: `./run-tests.sh all` for full test suite
 
@@ -130,16 +130,16 @@ composer install
 ### **Specifications**
 - **`dev-plan-dry-yagni.md`**: Implementation roadmap and requirements
 - **`api-contract-dry-yagni.md`**: REST API endpoint specifications
-- **`mk-wc-plugin-starter/ARCHITECTURE.md`**: Technical design decisions
-- **`mk-wc-plugin-starter/IMPLEMENTATION_STATUS.md`**: Current progress tracking
-- **`mk-wc-plugin-starter/TESTING_SUMMARY.md`**: Comprehensive testing strategy
+- **`wp-migrate/ARCHITECTURE.md`**: Technical design decisions
+- **`wp-migrate/IMPLEMENTATION_STATUS.md`**: Current progress tracking
+- **`wp-migrate/TESTING_SUMMARY.md`**: Comprehensive testing strategy
 
 ### **Code Structure**
-- **`mk-wc-plugin-starter/src/Plugin.php`**: Main plugin bootstrap and service registration
-- **`mk-wc-plugin-starter/src/Security/HmacAuth.php`**: Authentication and security logic
-- **`mk-wc-plugin-starter/src/Rest/Api.php`**: REST endpoint definitions
-- **`mk-wc-plugin-starter/src/Admin/SettingsPage.php`**: Configuration management
-- **`mk-wc-plugin-starter/src/Migration/DatabaseEngine.php`**: Database operations orchestration
+- **`wp-migrate/src/Plugin.php`**: Main plugin bootstrap and service registration
+- **`wp-migrate/src/Security/HmacAuth.php`**: Authentication and security logic
+- **`wp-migrate/src/Rest/Api.php`**: REST endpoint definitions
+- **`wp-migrate/src/Admin/SettingsPage.php`**: Configuration management
+- **`wp-migrate/src/Migration/DatabaseEngine.php`**: Database operations orchestration
 
 ## 🎯 **Current Status - Production Ready**
 
@@ -212,8 +212,8 @@ The plugin is now ready for immediate production use with full enterprise featur
 ## 📞 **Getting Help**
 
 ### **Code Issues**
-- Check `mk-wc-plugin-starter/IMPLEMENTATION_STATUS.md` for current status
-- Review `mk-wc-plugin-starter/ARCHITECTURE.md` for design decisions
+- Check `wp-migrate/IMPLEMENTATION_STATUS.md` for current status
+- Review `wp-migrate/ARCHITECTURE.md` for design decisions
 - Examine existing service implementations for patterns
 - Run tests: `./run-tests.sh all` for comprehensive validation
 

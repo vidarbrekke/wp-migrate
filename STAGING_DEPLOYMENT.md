@@ -27,8 +27,8 @@ cd /path/to/wordpress/wp-content/plugins/
 tar -xzf wp-migrate-plugin-staging.tar.gz
 
 # Set proper permissions
-chmod -R 755 mk-wc-plugin-starter/
-chown -R www-data:www-data mk-wc-plugin-starter/  # Adjust user:group as needed
+chmod -R 755 wp-migrate/
+chown -R www-data:www-data wp-migrate/  # Adjust user:group as needed
 ```
 
 ### **Step 3: Activate Plugin**
@@ -50,7 +50,7 @@ wp plugin list --status=active | grep wp-migrate
 ### **Test 2: Run Full Test Suite**
 ```bash
 # Navigate to plugin directory
-cd /path/to/wordpress/wp-content/plugins/mk-wc-plugin-starter/
+cd /path/to/wordpress/wp-content/plugins/wp-migrate/
 
 # Install dependencies
 composer install
@@ -122,9 +122,9 @@ php -v
 ### **Issue 3: WordPress Permissions**
 ```bash
 # Fix file permissions
-find mk-wc-plugin-starter/ -type f -exec chmod 644 {} \;
-find mk-wc-plugin-starter/ -type d -exec chmod 755 {} \;
-chmod +x mk-wc-plugin-starter/run-tests.sh
+find wp-migrate/ -type f -exec chmod 644 {} \;
+find wp-migrate/ -type d -exec chmod 755 {} \;
+chmod +x wp-migrate/run-tests.sh
 ```
 
 ### **Issue 4: Test Environment**

@@ -44,7 +44,7 @@ src/
 ```bash
 # Clone the repository
 git clone https://github.com/vidarbrekke/wp-migrate.git
-cd wp-migrate/mk-wc-plugin-starter
+cd wp-migrate/wp-migrate
 
 # Install dependencies
 composer install

@@ -24,13 +24,13 @@ cd /home/staging/public_html/wp-content/plugins/
 tar -xzf wp-migrate-plugin-staging.tar.gz
 
 # Set permissions
-chmod -R 755 mk-wc-plugin-starter/
-chmod +x mk-wc-plugin-starter/run-tests.sh
+chmod -R 755 wp-migrate/
+chmod +x wp-migrate/run-tests.sh
 ```
 
 ### **Step 3: Install Dependencies**
 ```bash
-cd mk-wc-plugin-starter/
+cd wp-migrate/
 composer install
 ```
 
@@ -119,7 +119,7 @@ wp core version
 - **User**: `staging`
 - **SSH Key**: `/Users/vidarbrekke/Dev/socialintent/staging.motherknitter.pem`
 - **WordPress Path**: `/home/staging/public_html/`
-- **Plugin Path**: `/home/staging/public_html/wp-content/plugins/mk-wc-plugin-starter/`
+- **Plugin Path**: `/home/staging/public_html/wp-content/plugins/wp-migrate/`
 - **Admin URL**: `http://45.33.31.79/wp-admin/`
 
 ---
