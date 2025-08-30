@@ -9,6 +9,7 @@ use MK\WcPluginStarter\Files\ChunkStore;
 use MK\WcPluginStarter\State\StateStore;
 use MK\WcPluginStarter\Migration\JobManager;
 use MK\WcPluginStarter\Logging\JsonLogger;
+use MK\WcPluginStarter\Preflight\Checker;
 use \WP_Error;
 use \WP_REST_Request;
 use \WP_REST_Response;
@@ -75,6 +76,17 @@ final class Api implements Registrable {
 
     public function handshake( WP_REST_Request $request ) {
         return $this->with_auth( $request, function () {
+            $checker = new Checker();
+            $preflight = $checker->run();
+            
+            if ( ! $preflight['ok'] ) {
+                return new WP_REST_Response( [ 
+                    'ok' => false, 
+                    'code' => 'EPREFLIGHT_FAILED',
+                    'errors' => $preflight['errors'] 
+                ], 400 );
+            }
+            
             $cap = [
                 'rsync'  => $this->has_rsync(),
                 'zstd'   => $this->has_zstd(),
@@ -92,9 +104,18 @@ final class Api implements Registrable {
     }
 
     public function command( WP_REST_Request $request ) {
-        return $this->with_auth( $request, function () {
-            // TODO: Implement stateful actions per spec
-            return new WP_REST_Response( [ 'ok' => false, 'code' => 'ENOT_IMPLEMENTED', 'message' => 'Command not implemented yet' ], 501 );
+        return $this->with_auth( $request, function () use ( $request ) {
+            $action = (string) ( $request->get_param( 'action' ) ?? '' );
+            $jobId = (string) ( $request->get_param( 'job_id' ) ?? '' );
+            
+            switch ( $action ) {
+                case 'health':
+                    return $this->handle_health( $jobId );
+                case 'prepare':
+                    return $this->handle_prepare( $jobId, $request );
+                default:
+                    return new WP_REST_Response( [ 'ok' => false, 'code' => 'EUNKNOWN_ACTION', 'message' => 'Unknown action: ' . $action ], 400 );
+            }
         } );
     }
 
@@ -160,6 +181,34 @@ final class Api implements Registrable {
             return $this->error_to_response( $auth, 'EAUTH' );
         }
         return $callback();
+    }
+
+    private function handle_health( string $jobId ): WP_REST_Response {
+        $job = $this->jobs->get_progress( $jobId );
+        return new WP_REST_Response( [ 
+            'ok' => true, 
+            'state' => (string) ( $job['state'] ?? 'created' ),
+            'job_id' => $jobId 
+        ] );
+    }
+
+    private function handle_prepare( string $jobId, WP_REST_Request $request ): WP_REST_Response {
+        $params = $request->get_json_params() ?? [];
+        $mode = (string) ( $params['mode'] ?? 'reset' );
+        $emailBlackhole = (bool) ( $params['email_blackhole'] ?? true );
+        
+        // Create or update job state
+        $job = $this->jobs->set_state( $jobId, 'preflight_ok', [
+            'mode' => $mode,
+            'email_blackhole' => $emailBlackhole,
+            'prepared_at' => gmdate( 'c' )
+        ] );
+        
+        return new WP_REST_Response( [ 
+            'ok' => true, 
+            'state' => 'preflight_ok',
+            'notes' => [ 'Job prepared successfully' ]
+        ] );
     }
 
     private function has_rsync(): bool {

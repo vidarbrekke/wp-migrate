@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 use MK\WcPluginStarter\Contracts\Registrable;
 
 final class SettingsPage implements Registrable {
-    const OPTION = 'mk_wcps_settings';
+    public const OPTION = 'mk_wcps_settings';
 
     public function register(): void {
         \add_action( 'admin_menu', [ $this, 'add_menu' ] );
