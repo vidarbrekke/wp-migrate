@@ -89,7 +89,7 @@ deploy_on_staging() {
         
         # Extract new plugin
         echo "📂 Extracting new plugin..."
-        tar -xzf wp-migrate-plugin-starter.tar.gz
+        tar -xzf wp-migrate-plugin-staging.tar.gz
         
         # Set proper permissions
         echo "🔐 Setting permissions..."
@@ -98,7 +98,7 @@ deploy_on_staging() {
         chmod +x mk-wc-plugin-starter/run-tests.sh
         
         # Clean up package
-        rm wp-migrate-plugin-starter.tar.gz
+        rm wp-migrate-plugin-staging.tar.gz
         
         echo "✅ Plugin deployed successfully!"
         
@@ -134,15 +134,21 @@ run_staging_tests() {
             exit 1
         fi
         
-        # Run critical tests first
-        echo "🔐 Running critical security tests..."
+        # Run full test suite
+        echo "🧪 Running full test suite..."
         if [ -f "run-tests.sh" ]; then
+            echo "🔐 Running security tests first..."
             ./run-tests.sh security
+            
+            echo "🚀 Running all tests with coverage..."
+            ./run-tests.sh all
+            
+            echo "📊 Test results available in tests/coverage/html/"
         else
             echo "⚠️  Test runner not found. Please run tests manually."
         fi
         
-        echo "✅ Tests completed!"
+        echo "✅ All tests completed!"
 EOF
 }
 

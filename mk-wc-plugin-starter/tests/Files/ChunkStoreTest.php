@@ -289,7 +289,9 @@ class ChunkStoreTest extends TestCase
         $chunkFiles = array_filter($files, fn($f) => !in_array($f, ['.', '..']));
 
         $this->assertCount(1, $chunkFiles);
-        $this->assertStringStartsWith('my-safe-file.txt', $chunkFiles[0] ?? '');
+        $this->assertNotEmpty($chunkFiles);
+        $firstFile = reset($chunkFiles);
+        $this->assertStringStartsWith('my-safe-file.txt', $firstFile);
     }
 
     /**

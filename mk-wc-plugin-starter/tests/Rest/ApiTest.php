@@ -495,15 +495,16 @@ class ApiTest extends TestCase
     {
         $methods = ['GET', 'POST', 'PUT', 'DELETE'];
 
+        // Set up mock to expect multiple calls
+        $this->mockAuth
+            ->expects($this->exactly(4))
+            ->method('verify_request')
+            ->willReturn(['ts' => time() * 1000, 'nonce' => 'test-nonce', 'peer' => $this->peerUrl]);
+
         foreach ($methods as $method) {
             $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, $method, '/wp-json/migrate/v1/handshake', '', $this->peerUrl);
 
             $request = TestHelper::createMockRequest($method, '/migrate/v1/handshake', $headers);
-
-            $this->mockAuth
-                ->expects($this->once())
-                ->method('verify_request')
-                ->willReturn(['ts' => time() * 1000, 'nonce' => 'test-nonce', 'peer' => $this->peerUrl]);
 
             $result = $this->api->handshake($request);
 

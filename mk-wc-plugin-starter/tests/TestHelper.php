@@ -150,9 +150,40 @@ class TestHelper
         string $peer = 'https://test.example.com',
         ?int $timestamp = null
     ): array {
-        // Generate timestamp that's guaranteed to be fresh and within skew tolerance
-        // Add a small buffer to account for test execution time
-        $timestamp = $timestamp ?? (int) ((microtime(true) + 1) * 1000); // Add 1 second buffer
+        // Generate timestamp that's guaranteed to be current and within skew tolerance
+        // Use server time to avoid skew issues in staging/production
+        if ($timestamp === null) {
+            // Get current server time in milliseconds
+            $timestamp = (int) (time() * 1000);
+        }
+        
+        $nonce = bin2hex(random_bytes(8));
+        $bodyHash = hash('sha256', $body);
+
+        $payload = $timestamp . "\n" . $nonce . "\n" . $method . "\n" . $path . "\n" . $bodyHash;
+        $signature = base64_encode(hash_hmac('sha256', $payload, $sharedKey, true));
+
+        return [
+            'x-mig-timestamp' => (string) $timestamp,
+            'x-mig-nonce' => $nonce,
+            'x-mig-peer' => $peer,
+            'x-mig-signature' => $signature,
+        ];
+    }
+
+    /**
+     * Generate HMAC headers with current timestamp for live testing
+     */
+    public static function generateLiveHmacHeaders(
+        string $sharedKey,
+        string $method = 'POST',
+        string $path = '/wp-json/migrate/v1/handshake',
+        string $body = '',
+        string $peer = 'https://test.example.com'
+    ): array {
+        // Always use current server time for live testing
+        $timestamp = (int) (time() * 1000);
+        
         $nonce = bin2hex(random_bytes(8));
         $bodyHash = hash('sha256', $body);
 

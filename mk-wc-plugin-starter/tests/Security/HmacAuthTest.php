@@ -43,7 +43,7 @@ class HmacAuthTest extends TestCase
     public function test_verify_request_success(): void
     {
         $body = '{"job_id":"test-123","capabilities":{"rsync":true}}';
-        $headers = TestHelper::generateValidHmacHeaders(
+        $headers = TestHelper::generateLiveHmacHeaders(
             $this->sharedKey,
             'POST',
             '/wp-json/migrate/v1/handshake',
@@ -146,7 +146,7 @@ class HmacAuthTest extends TestCase
      */
     public function test_verify_request_nonce_replay(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey);
 
         // First request should succeed
         $request1 = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers);
