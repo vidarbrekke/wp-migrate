@@ -3,7 +3,7 @@ namespace MK\WcPluginStarter\Files;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-final class ChunkStore {
+class ChunkStore {
 	private const MAX_CHUNK_SIZE = 64 * 1024 * 1024; // 64MB
 	private string $baseDir;
 

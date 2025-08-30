@@ -6,16 +6,14 @@
  * This file provides WordPress function mocks and testing utilities.
  */
 
-namespace MK\WcPluginStarter\Tests;
-
-if ( ! defined( 'ABSPATH' ) ) { exit; }
+// Prevent direct access
+if ( ! defined( 'ABSPATH' ) ) { 
+    define( 'ABSPATH', dirname( __DIR__ ) . '/' );
+}
 
 // Define essential WordPress constants for testing
 if ( ! defined( 'WPINC' ) ) {
     define( 'WPINC', 'wp-includes' );
-}
-if ( ! defined( 'ABSPATH' ) ) {
-    define( 'ABSPATH', dirname( __DIR__ ) . '/' );
 }
 
 // Mock essential WordPress functions
@@ -46,19 +44,19 @@ if ( ! function_exists( 'sanitize_file_name' ) ) {
 
 if ( ! function_exists( 'get_transient' ) ) {
     function get_transient( $key ) {
-        return TestHelper::get_transient( $key );
+        return \MK\WcPluginStarter\Tests\TestHelper::get_transient( $key );
     }
 }
 
 if ( ! function_exists( 'set_transient' ) ) {
     function set_transient( $key, $value, $expiration = 0 ) {
-        return TestHelper::set_transient( $key, $value, $expiration );
+        return \MK\WcPluginStarter\Tests\TestHelper::set_transient( $key, $value, $expiration );
     }
 }
 
 if ( ! function_exists( 'is_ssl' ) ) {
     function is_ssl() {
-        return TestHelper::is_ssl();
+        return \MK\WcPluginStarter\Tests\TestHelper::is_ssl();
     }
 }
 
@@ -91,16 +89,126 @@ if ( ! defined( 'WP_CLI' ) ) {
     define( 'WP_CLI', false );
 }
 
-// Autoload test classes
-spl_autoload_register( function ( $class ) {
-    if ( strpos( $class, 'MK\\WcPluginStarter\\Tests\\' ) === 0 ) {
-        $file = str_replace( '\\', '/', substr( $class, 23 ) );
-        $path = __DIR__ . '/' . $file . '.php';
-        if ( file_exists( $path ) ) {
-            require_once $path;
+// Mock WordPress classes if they don't exist
+if ( ! class_exists( 'WP_REST_Request' ) ) {
+    class WP_REST_Request {
+        private string $method = 'GET';
+        private string $route = '';
+        private array $headers = [];
+        private string $body = '';
+        private array $params = [];
+
+        public function __construct( string $method = 'GET', string $route = '' ) {
+            $this->method = $method;
+            $this->route = $route;
+        }
+
+        public function set_header( string $key, string $value ): void {
+            $this->headers[$key] = $value;
+        }
+
+        public function get_header( string $key ): ?string {
+            return $this->headers[$key] ?? null;
+        }
+
+        public function get_headers(): array {
+            return $this->headers;
+        }
+
+        public function set_body( string $body ): void {
+            $this->body = $body;
+        }
+
+        public function get_body(): string {
+            return $this->body;
+        }
+
+        public function set_param( string $key, mixed $value ): void {
+            $this->params[$key] = $value;
+        }
+
+        public function get_param( string $key ): mixed {
+            return $this->params[$key] ?? null;
+        }
+
+        public function get_method(): string {
+            return $this->method;
+        }
+
+        public function get_route(): string {
+            return $this->route;
         }
     }
-});
+}
+
+if ( ! class_exists( 'WP_REST_Response' ) ) {
+    class WP_REST_Response {
+        private mixed $data;
+        private int $status = 200;
+        private array $headers = [];
+
+        public function __construct( mixed $data = null, int $status = 200 ) {
+            $this->data = $data;
+            $this->status = $status;
+        }
+
+        public function set_data( mixed $data ): WP_REST_Response {
+            $this->data = $data;
+            return $this;
+        }
+
+        public function get_data(): mixed {
+            return $this->data;
+        }
+
+        public function set_status( int $status ): WP_REST_Response {
+            $this->status = $status;
+            return $this;
+        }
+
+        public function get_status(): int {
+            return $this->status;
+        }
+
+        public function set_header( string $key, string $value ): WP_REST_Response {
+            $this->headers[$key] = $value;
+            return $this;
+        }
+
+        public function get_headers(): array {
+            return $this->headers;
+        }
+    }
+}
+
+if ( ! class_exists( 'WP_Error' ) ) {
+    class WP_Error {
+        private string $code;
+        private string $message;
+        private array $data;
+
+        public function __construct( string $code = '', string $message = '', mixed $data = null ) {
+            $this->code = $code;
+            $this->message = $message;
+            $this->data = $data ? ( is_array( $data ) ? $data : [ 'status' => $data ] ) : [];
+        }
+
+        public function get_error_code(): string {
+            return $this->code;
+        }
+
+        public function get_error_message(): string {
+            return $this->message;
+        }
+
+        public function get_error_data( string $key = '' ): mixed {
+            if ( empty( $key ) ) {
+                return $this->data;
+            }
+            return $this->data[$key] ?? null;
+        }
+    }
+}
 
 // Include test helper
 require_once __DIR__ . '/TestHelper.php';

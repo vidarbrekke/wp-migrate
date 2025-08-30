@@ -4,15 +4,7 @@
     xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.1/phpunit.xsd"
     bootstrap="tests/bootstrap.php"
     colors="true"
-    verbose="true"
     stopOnFailure="false"
-    displayDetailsOnTestsThatTriggerDeprecation="true"
-    displayDetailsOnTestsThatTriggerError="true"
-    displayDetailsOnTestsThatTriggerNotice="true"
-    displayDetailsOnTestsThatTriggerWarning="true"
-    failOnDeprecation="false"
-    failOnNotice="false"
-    failOnWarning="false"
     cacheDirectory=".phpunit.cache"
 >
     <testsuites>

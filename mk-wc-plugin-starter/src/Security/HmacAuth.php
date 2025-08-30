@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 use \WP_Error;
 use \WP_REST_Request;
 
-final class HmacAuth {
+class HmacAuth {
 	const HDR_TS = 'x-mig-timestamp';
 	const HDR_NONCE = 'x-mig-nonce';
 	const HDR_PEER = 'x-mig-peer';

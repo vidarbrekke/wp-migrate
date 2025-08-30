@@ -6,12 +6,23 @@
   "require": {
     "php": ">=7.4"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^10.0",
+    "mockery/mockery": "^1.6"
+  },
   "autoload": {
     "psr-4": {
-      "MK\\\\WcPluginStarter\\\\": "src/"
+      "MK\\WcPluginStarter\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "MK\\WcPluginStarter\\Tests\\": "tests/"
     }
   },
   "scripts": {
-    "autoload": "composer dump-autoload -o"
+    "autoload": "composer dump-autoload -o",
+    "test": "phpunit",
+    "test:coverage": "phpunit --coverage-html tests/coverage/html"
   }
 }

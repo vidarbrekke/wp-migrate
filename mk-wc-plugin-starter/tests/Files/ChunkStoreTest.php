@@ -60,7 +60,7 @@ class ChunkStoreTest extends TestCase
         $jobDir = $this->chunkStore->get_job_dir($this->testJobId);
 
         $this->assertDirectoryExists($jobDir);
-        $this->assertStringContains($this->testJobId, $jobDir);
+        $this->assertStringContainsString($this->testJobId, $jobDir);
     }
 
     /**
@@ -71,7 +71,7 @@ class ChunkStoreTest extends TestCase
         $chunkDir = $this->chunkStore->get_chunk_dir($this->testJobId);
 
         $this->assertDirectoryExists($chunkDir);
-        $this->assertStringContains('chunks', $chunkDir);
+        $this->assertStringContainsString('chunks', $chunkDir);
     }
 
     /**
@@ -84,9 +84,9 @@ class ChunkStoreTest extends TestCase
 
         $chunkPath = $this->chunkStore->chunk_path($this->testJobId, $artifact, $index);
 
-        $this->assertStringContains($this->testJobId, $chunkPath);
-        $this->assertStringContains('chunks', $chunkPath);
-        $this->assertStringContains('db_dump.sql.zst.5', $chunkPath);
+        $this->assertStringContainsString($this->testJobId, $chunkPath);
+        $this->assertStringContainsString('chunks', $chunkPath);
+        $this->assertStringContainsString('db_dump.sql.zst.5', $chunkPath);
     }
 
     /**
@@ -134,7 +134,7 @@ class ChunkStoreTest extends TestCase
     {
         $artifact = 'large-artifact.txt';
         $index = 0;
-        $largeContent = str_repeat('a', ChunkStore::MAX_CHUNK_SIZE + 1); // Exceed limit
+        $largeContent = str_repeat('a', (64 * 1024 * 1024) + 1); // Exceed limit
         $hash = base64_encode(hash('sha256', $largeContent, true));
 
         $this->expectException(\InvalidArgumentException::class);
@@ -270,7 +270,7 @@ class ChunkStoreTest extends TestCase
         $chunkFiles = array_filter($files, fn($f) => !in_array($f, ['.', '..']));
 
         $this->assertCount(1, $chunkFiles);
-        $this->assertStringNotContains('..', $chunkFiles[0]);
+        $this->assertStringNotContainsString('..', $chunkFiles[0]);
     }
 
     /**
@@ -326,7 +326,7 @@ class ChunkStoreTest extends TestCase
         $largeContent = str_repeat('Large content test: 0123456789', 10000); // ~200KB
         $index = 0;
 
-        $this->assertLessThan(ChunkStore::MAX_CHUNK_SIZE, strlen($largeContent));
+        $this->assertLessThan(64 * 1024 * 1024, strlen($largeContent));
 
         $hash = base64_encode(hash('sha256', $largeContent, true));
         $this->chunkStore->save_chunk($this->testJobId, $artifact, $index, $largeContent, $hash);
@@ -408,8 +408,8 @@ class ChunkStoreTest extends TestCase
         $path2 = $this->chunkStore->chunk_path($this->testJobId, $artifact2, $index);
 
         $this->assertNotEquals($path1, $path2);
-        $this->assertStringContains('test1.txt.0', $path1);
-        $this->assertStringContains('test2.txt.0', $path2);
+        $this->assertStringContainsString('test1.txt.0', $path1);
+        $this->assertStringContainsString('test2.txt.0', $path2);
     }
 
     /**

@@ -1,0 +1,20 @@
+Hmac Auth (MK\WcPluginStarter\Tests\Security\HmacAuth)
+ [ ] Verify request success
+ [x] Verify request missing shared key
+ [x] Verify request missing headers
+ [x] Verify request timestamp skew
+ [x] Verify request future timestamp
+ [ ] Verify request nonce replay
+ [ ] Verify request invalid signature
+ [ ] Verify request peer mismatch
+ [ ] Verify request peer normalization
+ [x] Verify request tls required
+ [ ] Verify request proxy ssl detection
+ [ ] Verify request different methods
+ [ ] Verify request path normalization
+ [ ] Verify request empty body
+ [ ] Verify request large body
+ [ ] Verify request concurrent different nonces
+ [x] Verify request malformed headers
+ [ ] Verify request header case insensitivity
+
