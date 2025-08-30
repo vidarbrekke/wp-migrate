@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 use MK\WcPluginStarter\Contracts\Registrable;
 
 final class SettingsPage implements Registrable {
-    public const OPTION = 'mk_wcps_settings';
+    private const OPTION = 'mk_wcps_settings';
 
     public function register(): void {
         \add_action( 'admin_menu', [ $this, 'add_menu' ] );
@@ -145,5 +145,12 @@ final class SettingsPage implements Registrable {
             <p><em><?php \esc_html_e( 'This is a minimal, hooks-first, class-based starter. Extend by adding services under src/.', 'mk-wc-plugin-starter' ); ?></em></p>
         </div>
         <?php
+    }
+
+    /**
+     * Get migration settings for use by other services.
+     */
+    public function get_settings(): array {
+        return \get_option( self::OPTION, [] );
     }
 }

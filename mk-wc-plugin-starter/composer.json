@@ -12,13 +12,6 @@
     }
   },
   "scripts": {
-    "autoload": "composer dump-autoload -o",
-    "analyze": "phpstan analyse src/",
-    "lint": "phpcs src/"
-  },
-  "require-dev": {
-    "phpstan/phpstan": "^1.0",
-    "squizlabs/php_codesniffer": "^3.0",
-    "wp-coding-standards/wpcs": "^3.0"
+    "autoload": "composer dump-autoload -o"
   }
 }

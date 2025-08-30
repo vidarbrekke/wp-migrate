@@ -30,7 +30,8 @@ final class Plugin {
     private function register_services(): void {
         // Core services
         $auth = new HmacAuth( function () {
-            $opts = \get_option( SettingsPage::OPTION, [] );
+            $settings = new SettingsPage();
+            $opts = $settings->get_settings();
             return [
                 'shared_key' => isset( $opts['shared_key'] ) ? (string) $opts['shared_key'] : '',
                 'peer_url'   => isset( $opts['peer_url'] ) ? (string) $opts['peer_url'] : '',
@@ -39,7 +40,7 @@ final class Plugin {
 
         $this->services = [
             new Frontend(),
-            new SettingsPage(),
+            $settings,
             new Api( $auth ),
         ];
 

@@ -1,4 +1,4 @@
-# dev-plan.md — Minimal DRY & YAGNI Version
+yo# dev-plan.md — Minimal DRY & YAGNI Version
 *Goal: WordPress plugin to migrate production → staging. MySQL only. No extra infra. Resumable, safe, simple.*
 
 ---
