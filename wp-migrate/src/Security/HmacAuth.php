@@ -93,6 +93,14 @@ class HmacAuth {
 		// Use the REST route and prefix with /wp-json
 		$route = $request->get_route(); // like /migrate/v1/handshake
 		$path = '/wp-json' . $route;
+		
+		// Include query parameters in the path for HMAC signature calculation
+		// This ensures the client and server calculate the same signature
+		$query_string = $_SERVER['QUERY_STRING'] ?? '';
+		if ( ! empty( $query_string ) ) {
+			$path .= '?' . $query_string;
+		}
+		
 		return $path;
 	}
 
