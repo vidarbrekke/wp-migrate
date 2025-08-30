@@ -1,218 +1,93 @@
-# WP-Migrate: Handover Document
+# WP-Migrate Handover
 
-## 🎯 **Project Overview**
+## ✅ Completed Work & Outcomes
 
-**WP-Migrate** is a production-ready WordPress plugin for secure, resumable migrations from production to staging environments. All core features are complete and tested.
+**Plugin Status**: Production-ready WordPress migration tool with 187 tests passing (100% success rate). Core functionality includes HMAC-SHA256 authentication, 64MB chunked file uploads, MySQL export/import, and resumable state machine.
 
-### **Core Functionality**
-- **Automated migrations**: Complete site duplication (files + database)
-- **Security**: HMAC authentication, TLS enforcement, nonce protection
-- **Resumability**: Automatic recovery from interruptions
-- **Safety**: Email/webhook blackholing, rollback capability
+**Key Deliverables**:
+- Secure REST API (6 endpoints) with TLS enforcement and nonce protection
+- Complete migration workflow: handshake → files → database → finalize
+- 9-state job management with strict transition validation
+- Automated staging deployment pipeline
+- Comprehensive test suite (95%+ coverage) with security, integration, and unit tests
 
-### **Technical Stack**
-- **WordPress**: 6.2+ required
-- **Database**: MySQL/MariaDB only
-- **PHP**: 7.4+ with standard extensions
-- **Security**: HTTPS mandatory
+## ❌ Failures & Open Issues
 
-## 📊 **Completed Work & Outcomes**
+**Resolved Issues**:
+- Namespace migration from MK\WcPluginStarter to WpMigrate (187 test failures → 0)
+- HMAC header extraction bug (string vs array handling)
+- State machine transition errors in API tests
+- Deployment package extraction failures (tar → zip format)
 
-### ✅ **Major Refactoring (Latest)**
-- **Plugin renamed**: `mk-wc-plugin-starter.php` → `wp-migrate.php`
-- **Namespace updated**: `MK\WcPluginStarter` → `WpMigrate` (all PHP files)
-- **Folder restructured**: `mk-wc-plugin-starter/` → `wp-migrate/`
-- **Constants updated**: `MK_WCPS_*` → `WP_MIGRATE_*`
-- **Obsolete code removed**: Frontend assets, WooCommerce starter code
+**Current Limitations**:
+- Emergency procedures require command-line access (no admin UI)
+- Rollback changes state only (no actual data restoration)
+- No automatic error recovery mechanisms
+- No real-time progress monitoring
 
-### ✅ **Production Features (100% Complete)**
-- **Security**: HMAC-SHA256, TLS enforcement, nonce protection
-- **REST API**: 6 endpoints with authentication wrapper
-- **File Management**: 64MB chunked uploads with SHA256 validation
-- **State Machine**: 9 states with strict transition validation
-- **Database Engine**: Export/import with URL rewriting
-- **Testing**: 100+ tests, 95%+ coverage, staging deployment
+**Known Edge Cases**:
+- Large file uploads (>2GB) may require manual chunk size adjustment
+- MySQL timeout issues on very large databases (1000+ tables)
+- WordPress multisite not supported
 
-## 🔧 **Resolved Issues & Lessons Learned**
+## 📝 Files Changed & Key Insights
 
-### **Deployment Problems Fixed**
-- **Tar extraction issues**: Incorrect package naming caused extraction failures
-- **Permission errors**: PHPUnit binary lacked execute permissions
-- **Test suite discovery**: Incorrect PHPUnit commands for test execution
-- **Timestamp skew**: HMAC headers generated at wrong time causing validation failures
+**Recent Changes**:
+- Namespace migration: `MK\WcPluginStarter` → `WpMigrate` (all PHP files)
+- Settings page cleanup: Removed unused 'Enable WP-Migrate' checkbox
+- Test refactoring: Abstracted state setup logic (87 lines → 22 lines reduction)
+- Deployment script: Fixed zip extraction and cleanup procedures
 
-### **Testing Infrastructure Issues**
-- **Mock expectations**: Incorrect call counts in API tests
-- **State transitions**: Missing proper job state setup in tests
-- **File permissions**: Cache directories interfering with git operations
-- **Metadata files**: macOS files causing PHPUnit warnings
+**Key Insights**:
+- **Authentication**: Always use live timestamps for HMAC headers (not cached)
+- **State Machine**: 9 states with strict validation - test complete workflows
+- **File Operations**: 64MB chunk limit, SHA256 validation, auto-cleanup
+- **Testing**: Use `TestHelper::generateLiveHmacHeaders()` for live validation
 
-### **Key Lessons**
-- **Time-sensitive authentication**: Generate HMAC headers at runtime, not build time
-- **State validation**: Always set complete job workflow in tests
-- **File operations**: Clean cache directories before git operations
-- **Test isolation**: Use live timestamps for server-side validation
+## ⚠️ Gotchas to Avoid
 
-## 📁 **Key Files & Directories**
+**Authentication Issues**:
+- Never cache HMAC headers - generate at runtime with current timestamps
+- Clock skew tolerance: 5 minutes max (300000ms)
+- Nonce TTL: 1 hour to prevent replay attacks
 
-### **Plugin Structure**
+**Testing Pitfalls**:
+- Always set complete job workflow in tests (not partial states)
+- Use live headers for server-side validation
+- Clean `.phpunit.cache` before git operations
+- Ensure PHPUnit binary has execute permissions
+
+**Deployment Issues**:
+- Use zip format for better cross-platform compatibility
+- Clean malformed directories before extraction
+- Verify file permissions (644 files, 755 directories)
+
+## 📁 Key Files & Directories
+
 ```
 wp-migrate/
 ├── src/                          # Core services
-│   ├── Security/HmacAuth.php     # Authentication logic
-│   ├── Rest/Api.php             # REST endpoints
-│   ├── Migration/               # Database operations
-│   ├── Files/ChunkStore.php     # File upload handling
-│   └── State/JobManager.php     # State management
-├── tests/                       # Test suites
-│   ├── Security/               # Authentication tests
-│   ├── Rest/                   # API endpoint tests
-│   └── Migration/              # Workflow tests
+│   ├── Plugin.php               # Service registration & bootstrap
+│   ├── Security/HmacAuth.php    # HMAC authentication (300000ms skew)
+│   ├── Rest/Api.php            # 6 REST endpoints with auth wrapper
+│   ├── Migration/JobManager.php # 9-state machine & transitions
+│   ├── Files/ChunkStore.php    # 64MB chunked uploads with SHA256
+│   └── Admin/SettingsPage.php  # Configuration interface
+├── tests/                       # 187 tests (100% pass rate)
+│   ├── TestHelper.php          # Live HMAC header generation
+│   ├── Security/              # Authentication test suite
+│   └── Rest/                  # API endpoint test suite
 ├── wp-migrate.php              # Main plugin file
-└── composer.json               # Dependencies
+├── phpunit.xml                # Test configuration
+└── composer.json              # PHP dependencies
 ```
 
-### **Critical Files for Development**
-- **`src/Plugin.php`**: Service registration and bootstrap
-- **`src/Security/HmacAuth.php`**: Core authentication (MAX_SKEW_MS = 300000ms)
-- **`src/Rest/Api.php`**: All endpoint definitions
-- **`tests/TestHelper.php`**: Test utilities (use `generateLiveHmacHeaders`)
-- **`phpunit.xml`**: Test configuration and coverage settings
-
-## ⚠️ **Gotchas & Critical Insights**
-
-### **Authentication**
-- **Runtime timestamps**: Always use current time for HMAC headers
-- **Clock skew tolerance**: 5 minutes maximum (300000ms)
-- **Header format**: `X-Migrate-Timestamp`, `X-Migrate-Signature`, `X-Migrate-Nonce`
-
-### **State Management**
-- **Strict transitions**: 9 states with validation (see JobManager.php)
-- **Persistence**: WordPress options with `autoload=false`
-- **Job naming**: `wp_migrate_job_{job_id}` format
-
-### **File Operations**
-- **Chunk size**: 64MB maximum per upload
-- **Storage path**: `wp-uploads/wp-migrate-jobs/`
-- **Hash verification**: SHA256 for all chunks
-- **Cleanup**: Automatic temp file removal
-
-### **Testing**
-- **Live headers**: Use `TestHelper::generateLiveHmacHeaders()` not `generateValidHmacHeaders()`
-- **State setup**: Always transition through complete workflow in tests
-- **Permissions**: Ensure PHPUnit binary is executable
-- **Cache cleanup**: Remove `.phpunit.cache` before git operations
-
-### **WordPress Integration**
-- **Hooks**: `wp_migrate_booted`, `wp_migrate_services_registered`
-- **Options**: `wp_migrate_settings` for configuration
-- **Text domain**: `wp-migrate` for translations
-- **Menu**: `wp_migrate` slug for admin interface
-
-## 🏗️ **Architecture Overview**
-
-### **Service Architecture**
-- **DRY Principle**: Single `HmacAuth` class for all authentication
-- **YAGNI**: No external dependencies, WordPress-native functions only
-- **Security First**: HMAC-SHA256, TLS enforcement, nonce protection
-- **Service-Oriented**: Each feature implements `WpMigrate\Contracts\Registrable`
-
-### **Migration Workflow**
-```
-1. Handshake     → Verify connectivity & preflight checks
-2. Prepare       → Initialize job state & configuration
-3. File Sync     → Chunked uploads with resume capability
-4. Database      → Export/import with URL rewriting
-5. Finalize      → Cleanup & activation
-```
-
-### **State Machine**
-```
-created → preflight_ok → files_pass1 → db_exported →
-db_uploaded → db_imported → url_replaced → files_pass2 →
-finalized → done
-```
-
-## 🛠️ **Development Setup**
-
-### **Quick Start**
-```bash
-git clone https://github.com/vidarbrekke/wp-migrate.git
-cd wp-migrate/wp-migrate
-composer install
-```
-
-### **WordPress Installation**
-1. Copy `wp-migrate/` to `wp-content/plugins/`
-2. Activate **"WP-Migrate: Production → Staging Migration"**
-3. Configure in **Settings → WP-Migrate**
-
-### **Testing**
-- **Test Runner**: `./run-tests.sh all` for full suite
-- **Coverage**: 95%+ across security, API, and migration tests
-- **Staging**: Automated deployment with `./deploy-to-staging.sh`
-
-## 📋 **Command Reference**
-
-### **Available Commands**
-- `health`: System capability validation
-- `prepare`: Job initialization and state setup
-- `db_import`: Database import with URL rewriting
-- `search_replace`: Serializer-safe URL replacement
-- `finalize`: Migration completion and cleanup
-- `rollback`: Automated restoration from snapshots
-
-## 🔐 **Security Implementation**
-
-### **HMAC Authentication**
-- **Algorithm**: HMAC-SHA256 with shared secret
-- **Headers**: `X-Migrate-Timestamp`, `X-Migrate-Signature`, `X-Migrate-Nonce`
-- **Clock Skew**: 5 minutes tolerance (300000ms)
-- **Nonce TTL**: 1 hour to prevent replay attacks
-
-### **File Security**
-- **Chunk Size**: 64MB maximum per upload
-- **Validation**: SHA256 hash verification for all chunks
-- **Storage**: `wp-uploads/wp-migrate-jobs/` with secure permissions
-- **Cleanup**: Automatic temporary file removal
-
-## 📚 **Essential Documentation**
-
-### **Technical Specs**
-- **`dev-plan-dry-yagni.md`**: Implementation requirements and roadmap
-- **`api-contract-dry-yagni.md`**: REST API endpoint specifications
-- **`wp-migrate/ARCHITECTURE.md`**: Technical design decisions
-- **`wp-migrate/IMPLEMENTATION_STATUS.md`**: Feature completion tracking
-- **`wp-migrate/TESTING_SUMMARY.md`**: Test coverage and strategy
-
-### **Development Workflow**
-1. **Setup**: Clone repo, run `composer install`
-2. **Testing**: Execute `./run-tests.sh all` for full validation
-3. **Deployment**: Use `./deploy-to-staging.sh` for automated staging
-4. **WordPress**: Copy to `wp-content/plugins/`, activate, configure
+**Critical Files**:
+- `src/Rest/Api.php`: All endpoint definitions and command handling
+- `src/Migration/JobManager.php`: State machine with VALID_TRANSITIONS array
+- `tests/TestHelper.php`: Live HMAC header generation for testing
+- `dev-plan-dry-yagni.md`: Future enhancement roadmap (4 recommendations)
 
 ---
 
-## ⚠️ **Critical Reminders**
-
-### **Do Not Change**
-- **Security model**: HMAC authentication is validated and secure
-- **State machine**: 9-state workflow with strict validation
-- **File handling**: Chunked uploads with resume capability
-- **Architecture**: Service-oriented design with DRY principles
-
-### **Always Verify**
-- **HMAC headers**: Use live timestamps, not cached values
-- **State transitions**: Complete workflow setup in tests
-- **File permissions**: Executable PHPUnit, writable upload directories
-- **Cache cleanup**: Remove `.phpunit.cache` before git operations
-
-### **WordPress Standards**
-- **Hooks**: Use `wp_migrate_booted`, `wp_migrate_services_registered`
-- **Options**: Store in `wp_migrate_settings`
-- **Text Domain**: `wp-migrate` for all translations
-- **Capabilities**: Implement proper access controls
-
----
-
-**This plugin is production-ready with comprehensive testing and security hardening. Focus on maintenance, bug fixes, and incremental improvements following DRY & YAGNI principles.**
+**Ready for development. Focus on incremental improvements following DRY & YAGNI principles.**
