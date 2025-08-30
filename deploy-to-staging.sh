@@ -38,12 +38,12 @@ print_error() {
 
 # Check if deployment package exists
 check_package() {
-    if [ ! -f "wp-migrate-plugin-staging.tar.gz" ]; then
-        print_error "Deployment package not found: wp-migrate-plugin-staging.tar.gz"
+    if [ ! -f "wp-migrate-plugin-staging.zip" ]; then
+        print_error "Deployment package not found: wp-migrate-plugin-staging.zip"
         print_error "Run this script from the project root directory"
         exit 1
     fi
-    print_success "Deployment package found: wp-migrate-plugin-staging.tar.gz"
+    print_success "Deployment package found: wp-migrate-plugin-staging.zip"
 }
 
 # Check if SSH key exists
@@ -60,8 +60,8 @@ check_ssh_key() {
 # Upload package to staging server
 upload_package() {
     print_status "Uploading deployment package to staging server..."
-    
-    if scp -i "$STAGING_SSH_KEY" wp-migrate-plugin-staging.tar.gz "$STAGING_USER@$STAGING_SERVER:$STAGING_PATH/"; then
+
+    if scp -i "$STAGING_SSH_KEY" wp-migrate-plugin-staging.zip "$STAGING_USER@$STAGING_SERVER:$STAGING_PATH/"; then
         print_success "Package uploaded successfully"
     else
         print_error "Failed to upload package"
@@ -81,26 +81,22 @@ deploy_on_staging() {
         # Navigate to plugins directory
         cd /home/staging/public_html/wp-content/plugins/
 
-        # Check for existing plugin and handle deactivation
-        if [ -d "wp-migrate" ]; then
-            echo "🔄 Existing plugin found - preparing for update..."
+        # Always do a clean installation to avoid conflicts
+        echo "🧹 Preparing clean plugin installation..."
 
-            # Check if plugin is active in WordPress
-            if wp plugin is-active wp-migrate --path=/home/staging/public_html/ 2>/dev/null; then
-                echo "🔌 Deactivating existing plugin..."
-                wp plugin deactivate wp-migrate --path=/home/staging/public_html/
-            fi
-
-            # Remove old plugin completely (WordPress best practice)
-            echo "🗑️  Removing old plugin version..."
-            rm -rf wp-migrate/
-        else
-            echo "📦 Fresh plugin installation..."
+        # Check if plugin is active in WordPress and deactivate if needed
+        if wp plugin is-active wp-migrate --path=/home/staging/public_html/ 2>/dev/null; then
+            echo "🔌 Deactivating existing plugin..."
+            wp plugin deactivate wp-migrate --path=/home/staging/public_html/
         fi
+
+        # Remove old plugin completely to ensure clean extraction
+        echo "🗑️  Removing any existing plugin files..."
+        rm -rf wp-migrate/
 
         # Extract new plugin
         echo "📂 Extracting new plugin version..."
-        tar -xzf wp-migrate-plugin-staging.tar.gz
+        unzip -q wp-migrate-plugin-staging.zip
 
         # Verify plugin structure
         if [ ! -f "wp-migrate/wp-migrate.php" ]; then
@@ -122,7 +118,7 @@ deploy_on_staging() {
         fi
 
         # Clean up deployment package
-        rm wp-migrate-plugin-staging.tar.gz
+        rm wp-migrate-plugin-staging.zip
 
         # Get version info for logging
         if [ -f "wp-migrate/VERSION" ]; then
