@@ -6,12 +6,12 @@
  * or integrated with a testing framework like PHPUnit later.
  */
 
-namespace MK\WcPluginStarter\Tests;
+namespace WpMigrate\Tests;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-use MK\WcPluginStarter\Files\ChunkStore;
-use MK\WcPluginStarter\Migration\DatabaseEngine;
+use WpMigrate\Files\ChunkStore;
+use WpMigrate\Migration\DatabaseEngine;
 use PHPUnit\Framework\TestCase;
 
 class DatabaseEngineTest extends TestCase {

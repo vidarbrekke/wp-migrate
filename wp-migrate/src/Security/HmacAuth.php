@@ -11,7 +11,7 @@ class HmacAuth {
 	const HDR_NONCE = 'x-mig-nonce';
 	const HDR_PEER = 'x-mig-peer';
 	const HDR_SIG = 'x-mig-signature';
-	const MAX_SKEW_MS = 60 * 60 * 1000; // 60 minutes for testing flexibility
+	const MAX_SKEW_MS = 5 * 60 * 1000; // 5 minutes as per specification
 	const NONCE_TTL = 3600; // seconds
 
 	/**
@@ -40,10 +40,10 @@ class HmacAuth {
 		}
 
 		$headers = $this->lowercase_headers( $request->get_headers() );
-		$tsStr = $headers[ self::HDR_TS ][0] ?? '';
-		$nonce = $headers[ self::HDR_NONCE ][0] ?? '';
-		$peer = $headers[ self::HDR_PEER ][0] ?? '';
-		$sig = $headers[ self::HDR_SIG ][0] ?? '';
+		$tsStr = $this->extract_header_value( $headers, self::HDR_TS );
+		$nonce = $this->extract_header_value( $headers, self::HDR_NONCE );
+		$peer = $this->extract_header_value( $headers, self::HDR_PEER );
+		$sig = $this->extract_header_value( $headers, self::HDR_SIG );
 
 		if ( $tsStr === '' || $nonce === '' || $sig === '' ) {
 			return new WP_Error( 'EAUTH', 'Missing auth headers', [ 'status' => 401 ] );
@@ -100,13 +100,21 @@ class HmacAuth {
 		return $out;
 	}
 
+	private function extract_header_value( array $headers, string $key ): string {
+		$value = $headers[ $key ] ?? '';
+		if ( is_array( $value ) ) {
+			return $value[0] ?? '';
+		}
+		return (string) $value;
+	}
+
 	private function is_nonce_used( string $nonce ): bool {
-		$key = 'mk_mig_nonce_' . md5( $nonce );
+		$key = 'wp_migrate_nonce_' . md5( $nonce );
 		return (bool) \get_transient( $key );
 	}
 
 	private function mark_nonce_used( string $nonce ): void {
-		$key = 'mk_mig_nonce_' . md5( $nonce );
+		$key = 'wp_migrate_nonce_' . md5( $nonce );
 		\set_transient( $key, 1, self::NONCE_TTL );
 	}
 

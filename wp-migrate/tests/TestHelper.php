@@ -6,7 +6,7 @@
  * Includes mocks, fixtures, and test data generation.
  */
 
-namespace MK\WcPluginStarter\Tests;
+namespace WpMigrate\Tests;
 
 use PHPUnit\Framework\TestCase;
 

@@ -6,10 +6,10 @@
  * These tests ensure authentication works correctly and security is maintained.
  */
 
-namespace MK\WcPluginStarter\Tests\Security;
+namespace WpMigrate\Tests\Security;
 
-use MK\WcPluginStarter\Security\HmacAuth;
-use MK\WcPluginStarter\Tests\TestHelper;
+use WpMigrate\Security\HmacAuth;
+use WpMigrate\Tests\TestHelper;
 use PHPUnit\Framework\TestCase;
 use WP_Error;
 use WP_REST_Request;

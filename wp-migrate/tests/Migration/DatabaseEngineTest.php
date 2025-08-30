@@ -6,14 +6,14 @@
  * export, import, and URL replacement operations.
  */
 
-namespace MK\WcPluginStarter\Tests\Migration;
+namespace WpMigrate\Tests\Migration;
 
-use MK\WcPluginStarter\Migration\DatabaseEngine;
-use MK\WcPluginStarter\Migration\DatabaseExporter;
-use MK\WcPluginStarter\Migration\DatabaseImporter;
-use MK\WcPluginStarter\Migration\UrlReplacer;
-use MK\WcPluginStarter\Files\ChunkStore;
-use MK\WcPluginStarter\Tests\TestHelper;
+use WpMigrate\Migration\DatabaseEngine;
+use WpMigrate\Migration\DatabaseExporter;
+use WpMigrate\Migration\DatabaseImporter;
+use WpMigrate\Migration\UrlReplacer;
+use WpMigrate\Files\ChunkStore;
+use WpMigrate\Tests\TestHelper;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 

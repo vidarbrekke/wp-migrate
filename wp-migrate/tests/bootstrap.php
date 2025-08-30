@@ -44,19 +44,19 @@ if ( ! function_exists( 'sanitize_file_name' ) ) {
 
 if ( ! function_exists( 'get_transient' ) ) {
     function get_transient( $key ) {
-        return \MK\WcPluginStarter\Tests\TestHelper::get_transient( $key );
+        return \WpMigrate\Tests\TestHelper::get_transient( $key );
     }
 }
 
 if ( ! function_exists( 'set_transient' ) ) {
     function set_transient( $key, $value, $expiration = 0 ) {
-        return \MK\WcPluginStarter\Tests\TestHelper::set_transient( $key, $value, $expiration );
+        return \WpMigrate\Tests\TestHelper::set_transient( $key, $value, $expiration );
     }
 }
 
 if ( ! function_exists( 'is_ssl' ) ) {
     function is_ssl() {
-        return \MK\WcPluginStarter\Tests\TestHelper::is_ssl();
+        return \WpMigrate\Tests\TestHelper::is_ssl();
     }
 }
 
@@ -83,19 +83,19 @@ if ( ! function_exists( 'get_bloginfo' ) ) {
 
 if ( ! function_exists( 'get_option' ) ) {
     function get_option( $option, $default = false ) {
-        return \MK\WcPluginStarter\Tests\TestHelper::get_option( $option, $default );
+        return \WpMigrate\Tests\TestHelper::get_option( $option, $default );
     }
 }
 
 if ( ! function_exists( 'update_option' ) ) {
     function update_option( $option, $value, $autoload = null ) {
-        return \MK\WcPluginStarter\Tests\TestHelper::update_option( $option, $value, $autoload );
+        return \WpMigrate\Tests\TestHelper::update_option( $option, $value, $autoload );
     }
 }
 
 if ( ! function_exists( 'delete_option' ) ) {
     function delete_option( $option ) {
-        unset( \MK\WcPluginStarter\Tests\TestHelper::$options[$option] );
+        unset( \WpMigrate\Tests\TestHelper::$options[$option] );
         return true;
     }
 }
@@ -115,6 +115,12 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
 if ( ! function_exists( 'wp_json_decode' ) ) {
     function wp_json_decode( $data, $assoc = false ) {
         return json_decode( $data, $assoc );
+    }
+}
+
+if ( ! function_exists( 'is_wp_error' ) ) {
+    function is_wp_error( $thing ) {
+        return ( $thing instanceof \WP_Error );
     }
 }
 

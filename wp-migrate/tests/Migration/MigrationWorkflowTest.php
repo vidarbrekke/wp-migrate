@@ -6,11 +6,11 @@
  * validating state machine transitions, error handling, and rollback.
  */
 
-namespace MK\WcPluginStarter\Tests\Migration;
+namespace WpMigrate\Tests\Migration;
 
-use MK\WcPluginStarter\Migration\JobManager;
-use MK\WcPluginStarter\State\StateStore;
-use MK\WcPluginStarter\Tests\TestHelper;
+use WpMigrate\Migration\JobManager;
+use WpMigrate\State\StateStore;
+use WpMigrate\Tests\TestHelper;
 use PHPUnit\Framework\TestCase;
 
 class MigrationWorkflowTest extends TestCase

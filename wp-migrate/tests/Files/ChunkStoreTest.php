@@ -6,10 +6,10 @@
  * These tests ensure data integrity, security, and proper file operations.
  */
 
-namespace MK\WcPluginStarter\Tests\Files;
+namespace WpMigrate\Tests\Files;
 
-use MK\WcPluginStarter\Files\ChunkStore;
-use MK\WcPluginStarter\Tests\TestHelper;
+use WpMigrate\Files\ChunkStore;
+use WpMigrate\Tests\TestHelper;
 use PHPUnit\Framework\TestCase;
 
 class ChunkStoreTest extends TestCase

@@ -6,15 +6,15 @@
  * These tests ensure proper authentication, request handling, and response formatting.
  */
 
-namespace MK\WcPluginStarter\Tests\Rest;
+namespace WpMigrate\Tests\Rest;
 
-use MK\WcPluginStarter\Rest\Api;
-use MK\WcPluginStarter\Security\HmacAuth;
-use MK\WcPluginStarter\Migration\DatabaseEngine;
-use MK\WcPluginStarter\Files\ChunkStore;
-use MK\WcPluginStarter\State\StateStore;
-use MK\WcPluginStarter\Migration\JobManager;
-use MK\WcPluginStarter\Tests\TestHelper;
+use WpMigrate\Rest\Api;
+use WpMigrate\Security\HmacAuth;
+use WpMigrate\Migration\DatabaseEngine;
+use WpMigrate\Files\ChunkStore;
+use WpMigrate\State\StateStore;
+use WpMigrate\Migration\JobManager;
+use WpMigrate\Tests\TestHelper;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use WP_REST_Request;
@@ -123,6 +123,14 @@ class ApiTest extends TestCase
      */
     public function test_db_export_success(): void
     {
+        // Set up job in correct state for db_export (files_pass1)
+        $reflection = new \ReflectionClass($this->api);
+        $jobManagerProperty = $reflection->getProperty('jobs');
+        $jobManagerProperty->setAccessible(true);
+        $jobManager = $jobManagerProperty->getValue($this->api);
+        $jobManager->set_state($this->testJobId, 'preflight_ok');
+        $jobManager->set_state($this->testJobId, 'files_pass1');
+
         $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/db/export', '', $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/db/export', $headers);
@@ -215,6 +223,16 @@ class ApiTest extends TestCase
      */
     public function test_command_db_import_success(): void
     {
+        // Set up job in correct state for db_import (db_uploaded)
+        $reflection = new \ReflectionClass($this->api);
+        $jobManagerProperty = $reflection->getProperty('jobs');
+        $jobManagerProperty->setAccessible(true);
+        $jobManager = $jobManagerProperty->getValue($this->api);
+        $jobManager->set_state($this->testJobId, 'preflight_ok');
+        $jobManager->set_state($this->testJobId, 'files_pass1');
+        $jobManager->set_state($this->testJobId, 'db_exported');
+        $jobManager->set_state($this->testJobId, 'db_uploaded');
+
         $params = ['action' => 'db_import', 'job_id' => $this->testJobId, 'params' => ['artifact' => 'test-import.sql.zst']];
         $body = wp_json_encode($params);
         $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $body, $this->peerUrl);
@@ -249,6 +267,17 @@ class ApiTest extends TestCase
      */
     public function test_command_search_replace_success(): void
     {
+        // Set up job in correct state for search_replace (db_imported)
+        $reflection = new \ReflectionClass($this->api);
+        $jobManagerProperty = $reflection->getProperty('jobs');
+        $jobManagerProperty->setAccessible(true);
+        $jobManager = $jobManagerProperty->getValue($this->api);
+        $jobManager->set_state($this->testJobId, 'preflight_ok');
+        $jobManager->set_state($this->testJobId, 'files_pass1');
+        $jobManager->set_state($this->testJobId, 'db_exported');
+        $jobManager->set_state($this->testJobId, 'db_uploaded');
+        $jobManager->set_state($this->testJobId, 'db_imported');
+
         $config = [
             'mode' => 'hybrid',
             'siteurl' => 'https://staging.example.com',
