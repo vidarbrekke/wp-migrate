@@ -5,10 +5,41 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 use WpMigrate\Logging\JsonLogger;
 
+interface RetryConfigInterface {
+    public function getMaxRetries(): int;
+    public function getBaseBackoffSeconds(): int;
+    public function getMaxBackoffSeconds(): int;
+}
+
+final class DefaultRetryConfig implements RetryConfigInterface {
+    public function getMaxRetries(): int {
+        return 3;
+    }
+
+    public function getBaseBackoffSeconds(): int {
+        return 30;
+    }
+
+    public function getMaxBackoffSeconds(): int {
+        return 900;
+    }
+}
+
 final class ErrorRecovery {
-    private const MAX_RETRIES = 3;
-    private const BASE_BACKOFF_SECONDS = 30; // 30 seconds
-    private const MAX_BACKOFF_SECONDS = 900; // 15 minutes
+    private const DEFAULT_MAX_RETRIES = 3;
+    private const DEFAULT_BASE_BACKOFF_SECONDS = 30; // 30 seconds
+    private const DEFAULT_MAX_BACKOFF_SECONDS = 900; // 15 minutes
+
+    private int $maxRetries;
+    private int $baseBackoffSeconds;
+    private int $maxBackoffSeconds;
+
+    public function __construct( ?RetryConfigInterface $config = null ) {
+        $config = $config ?? new DefaultRetryConfig();
+        $this->maxRetries = $config->getMaxRetries();
+        $this->baseBackoffSeconds = $config->getBaseBackoffSeconds();
+        $this->maxBackoffSeconds = $config->getMaxBackoffSeconds();
+    }
 
     /**
      * Error patterns that are recoverable
@@ -62,11 +93,11 @@ final class ErrorRecovery {
         $attempt = 0;
         $lastException = null;
 
-        while ( $attempt < self::MAX_RETRIES ) {
+        while ( $attempt < $this->maxRetries ) {
             try {
                 $logger->log( 'retry_attempt', 'info', "Attempting {$operationName} (attempt " . ($attempt + 1) . ")", [
                     'attempt' => $attempt + 1,
-                    'max_attempts' => self::MAX_RETRIES
+                    'max_attempts' => $this->maxRetries
                 ]);
 
                 $result = $operation();
@@ -91,13 +122,13 @@ final class ErrorRecovery {
 
                 $logger->log( 'retry_error', $isRecoverable ? 'warning' : 'error', "Error in {$operationName}: " . $e->getMessage(), [
                     'attempt' => $attempt,
-                    'max_attempts' => self::MAX_RETRIES,
+                    'max_attempts' => $this->maxRetries,
                     'is_recoverable' => $isRecoverable,
                     'error_type' => get_class( $e ),
                     'error_code' => $e->getCode()
                 ]);
 
-                if ( ! $isRecoverable || $attempt >= self::MAX_RETRIES ) {
+                if ( ! $isRecoverable || $attempt >= $this->maxRetries ) {
                     break;
                 }
 
@@ -114,8 +145,8 @@ final class ErrorRecovery {
         }
 
         // All retries exhausted
-        $logger->log( 'retry_exhausted', 'error', "{$operationName} failed after " . self::MAX_RETRIES . " attempts", [
-            'total_attempts' => self::MAX_RETRIES,
+        $logger->log( 'retry_exhausted', 'error', "{$operationName} failed after " . $this->maxRetries . " attempts", [
+            'total_attempts' => $this->maxRetries,
             'final_error' => $lastException ? $lastException->getMessage() : 'Unknown error'
         ]);
 
@@ -126,14 +157,14 @@ final class ErrorRecovery {
      * Calculate backoff delay using exponential backoff with jitter
      */
     protected function calculate_backoff_delay( int $attempt ): int {
-        $exponentialDelay = self::BASE_BACKOFF_SECONDS * (2 ** ($attempt - 1));
+        $exponentialDelay = $this->baseBackoffSeconds * (2 ** ($attempt - 1));
 
         // Add jitter to prevent thundering herd
         $jitter = random_int( 0, (int) ($exponentialDelay * 0.1) );
 
         $delay = $exponentialDelay + $jitter;
 
-        return min( $delay, self::MAX_BACKOFF_SECONDS );
+        return min( $delay, $this->maxBackoffSeconds );
     }
 
     /**
@@ -206,7 +237,7 @@ final class ErrorRecovery {
      */
     public function schedule_retry( string $jobId, array $job ): int {
         $errorCount = count( $job['errors'] ?? [] );
-        $delay = $this->calculate_backoff_delay( min( $errorCount, self::MAX_RETRIES ) );
+        $delay = $this->calculate_backoff_delay( min( $errorCount, $this->maxRetries ) );
 
         $logger = new JsonLogger( $jobId );
         $logger->log( 'retry_scheduled', 'info', "Scheduling job retry in {$delay} seconds", [

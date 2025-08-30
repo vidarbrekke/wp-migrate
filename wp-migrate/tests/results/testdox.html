@@ -51,6 +51,89 @@
         </style>
     </head>
     <body>
+        <h2>Api (WpMigrate\Tests\Rest\Api)</h2>
+        <ul>
+            <li class="success">Handshake success</li>
+            <li class="success">Handshake authentication failure</li>
+            <li class="success">Db export success</li>
+            <li class="success">Db export failure</li>
+            <li class="success">Db export missing job id</li>
+            <li class="success">Command db import success</li>
+            <li class="success">Command search replace success</li>
+            <li class="success">Command finalize success</li>
+            <li class="success">Command unknown action</li>
+            <li class="success">Chunk upload success</li>
+            <li class="success">Chunk listing</li>
+            <li class="success">Progress endpoint</li>
+            <li class="success">Logs tail endpoint</li>
+            <li class="success">Authentication wrapper error handling</li>
+            <li class="success">Different http methods</li>
+            <li class="success">Concurrent requests</li>
+            <li class="success">Malformed json handling</li>
+            <li class="success">Large request body</li>
+            <li class="success">Rate limiting simulation</li>
+        </ul>
+        <h2>Chunk Store (WpMigrate\Tests\Files\ChunkStore)</h2>
+        <ul>
+            <li class="success">Get job dir creates directory</li>
+            <li class="success">Get chunk dir creates directory</li>
+            <li class="success">Chunk path generation</li>
+            <li class="success">Save chunk success</li>
+            <li class="success">Save chunk invalid hash</li>
+            <li class="success">Save chunk size limit</li>
+            <li class="success">Save chunk path traversal protection</li>
+            <li class="success">Save chunk job id path traversal</li>
+            <li class="success">List present empty</li>
+            <li class="success">List present with chunks</li>
+            <li class="success">List present different artifacts</li>
+            <li class="success">List present chunk ordering</li>
+            <li class="success">Filename sanitization</li>
+            <li class="success">Safe filename sanitization</li>
+            <li class="success">Concurrent chunk operations</li>
+            <li class="success">Chunk integrity</li>
+            <li class="success">Large chunk handling</li>
+            <li class="success">Binary content handling</li>
+            <li class="success">Empty chunk handling</li>
+            <li class="success">Directory permission handling</li>
+            <li class="success">Chunk path uniqueness</li>
+            <li class="success">Chunk cleanup simulation</li>
+        </ul>
+        <h2>Database Engine (WpMigrate\Tests\Migration\DatabaseEngine)</h2>
+        <ul>
+            <li class="success">Export database success</li>
+            <li class="success">Export database failure</li>
+            <li class="success">Import database success</li>
+            <li class="success">Import database failure</li>
+            <li class="success">Search replace urls success</li>
+            <li class="success">Search replace urls failure</li>
+            <li class="success">Default artifact names</li>
+            <li class="success">Method delegation</li>
+            <li class="success">Constructor dependency injection</li>
+            <li class="success">Error propagation</li>
+            <li class="success">Job id consistency</li>
+            <li class="success">Mixed operation scenarios</li>
+            <li class="success">Operation isolation</li>
+        </ul>
+        <h2>Error Recovery (WpMigrate\Tests\Migration\ErrorRecovery)</h2>
+        <ul>
+            <li class="success">Is recoverable error detects timeout errors</li>
+            <li class="success">Is recoverable error detects connection errors</li>
+            <li class="success">Is recoverable error detects network errors</li>
+            <li class="success">Is recoverable error detects http timeout</li>
+            <li class="success">Is recoverable error detects server errors</li>
+            <li class="success">Is recoverable error detects database deadlock</li>
+            <li class="success">Is recoverable error rejects non recoverable errors</li>
+            <li class="success">Is recoverable error rejects syntax errors</li>
+            <li class="success">Calculate backoff delay increases with attempts</li>
+            <li class="success">Calculate backoff delay respects maximum</li>
+            <li class="success">Execute with retry succeeds on first attempt</li>
+            <li class="success">Execute with retry retries recoverable errors</li>
+            <li class="success">Execute with retry fails after max retries</li>
+            <li class="success">Execute with retry does not retry non recoverable errors</li>
+            <li class="success">Should retry job with mostly recoverable errors</li>
+            <li class="success">Should not retry job with mostly non recoverable errors</li>
+            <li class="success">Schedule retry returns positive delay</li>
+        </ul>
         <h2>Hmac Auth (WpMigrate\Tests\Security\HmacAuth)</h2>
         <ul>
             <li class="success">Verify request success</li>
@@ -71,6 +154,15 @@
             <li class="success">Verify request concurrent different nonces</li>
             <li class="success">Verify request malformed headers</li>
             <li class="success">Verify request header case insensitivity</li>
+        </ul>
+        <h2>Migration Workflow (WpMigrate\Tests\Migration\MigrationWorkflow)</h2>
+        <ul>
+            <li class="success">Complete migration workflow</li>
+            <li class="success">Workflow with error recovery</li>
+            <li class="success">Invalid state transitions rejected</li>
+            <li class="success">Rollback validation</li>
+            <li class="success">Progress calculation</li>
+            <li class="success">Metadata accumulation</li>
         </ul>
     </body>
 </html>
