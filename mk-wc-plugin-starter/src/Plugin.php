@@ -29,8 +29,9 @@ final class Plugin {
 
     private function register_services(): void {
         // Core services
-        $auth = new HmacAuth( function () {
-            $settings = new SettingsPage();
+        $settings = new SettingsPage();
+        
+        $auth = new HmacAuth( function () use ( $settings ) {
             $opts = $settings->get_settings();
             return [
                 'shared_key' => isset( $opts['shared_key'] ) ? (string) $opts['shared_key'] : '',
