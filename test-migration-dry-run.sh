@@ -237,7 +237,6 @@ main() {
     echo "📅 Test completed at: $(date)"
     echo "🔑 Job ID: $JOB_ID"
 }
-
 # Check dependencies
 if ! command -v jq &> /dev/null; then
     log_error "jq is required but not installed. Please install jq first."

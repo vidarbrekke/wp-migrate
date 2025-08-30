@@ -93,6 +93,7 @@ You’ve fixed the bug—well done. Now go deeper: confirm all your solutions ar
 4. **Review & Optimize:** Perform a final code review for bugs, edge cases, and performance; deliver runnable code.
 
 ## Chat Handoff Summary
+Let us hand this project over to a new deveveloper to futher develop, test and debug. Please provide them with all the information they need to succeed by editing @HANDOVER.md.
 - **Goal:** Brief a new developer on project status in short & concise  paragraphs covering:
   1. Completed work and outcomes
   2. Failures, open issues, and lessons learned
