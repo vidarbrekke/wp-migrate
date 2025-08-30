@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name: MK WooCommerce Plugin Starter
- * Description: Hooks-first, class-based starter for WordPress + WooCommerce plugin development. Theme-agnostic. DRY & YAGNI.
+ * Plugin Name: WP-Migrate: Production → Staging Migration
+ * Description: Secure, resumable WordPress migrations between production and staging environments. HMAC authentication, chunked uploads, and preflight validation.
  * Version: 0.1.0
  * Author: Vidar Brekke
  * Text Domain: mk-wc-plugin-starter
  * Requires at least: 6.2
  * Requires PHP: 7.4
- * WC tested up to: 9.1
+ * Network: false
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }

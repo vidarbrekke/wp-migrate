@@ -1,7 +1,8 @@
 {
-  "name": "motherknitter/mk-wc-plugin-starter",
-  "description": "Hooks-first, class-based starter for WordPress + WooCommerce plugins.",
+  "name": "motherknitter/wp-migrate",
+  "description": "Secure, resumable WordPress migrations between production and staging environments",
   "type": "wordpress-plugin",
+  "keywords": ["wordpress", "migration", "staging", "production", "deployment"],
   "require": {
     "php": ">=7.4"
   },
@@ -11,6 +12,13 @@
     }
   },
   "scripts": {
-    "autoload": "composer dump-autoload -o"
+    "autoload": "composer dump-autoload -o",
+    "analyze": "phpstan analyse src/",
+    "lint": "phpcs src/"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^1.0",
+    "squizlabs/php_codesniffer": "^3.0",
+    "wp-coding-standards/wpcs": "^3.0"
   }
 }
