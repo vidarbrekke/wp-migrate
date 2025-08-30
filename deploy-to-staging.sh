@@ -89,7 +89,7 @@ deploy_on_staging() {
         
         # Extract new plugin
         echo "📂 Extracting new plugin..."
-        tar -xzf wp-migrate-plugin-staging.tar.gz
+        tar -xzf wp-migrate-plugin-starter.tar.gz
         
         # Set proper permissions
         echo "🔐 Setting permissions..."
@@ -98,17 +98,17 @@ deploy_on_staging() {
         chmod +x mk-wc-plugin-starter/run-tests.sh
         
         # Clean up package
-        rm wp-migrate-plugin-staging.tar.gz
+        rm wp-migrate-plugin-starter.tar.gz
         
         echo "✅ Plugin deployed successfully!"
         
         # Navigate to plugin directory
         cd mk-wc-plugin-starter/
         
-        # Install dependencies
+        # Install dependencies (including dev dependencies for testing)
         echo "📦 Installing dependencies..."
         if command -v composer &> /dev/null; then
-            composer install --no-dev --optimize-autoloader
+            composer install --optimize-autoloader
         else
             echo "⚠️  Composer not found. Please install dependencies manually."
         fi
