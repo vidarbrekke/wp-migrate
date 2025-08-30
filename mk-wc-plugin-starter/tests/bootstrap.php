@@ -87,6 +87,18 @@ if ( ! function_exists( 'get_option' ) ) {
     }
 }
 
+if ( ! function_exists( 'update_option' ) ) {
+    function update_option( $option, $value, $autoload = null ) {
+        return true;
+    }
+}
+
+if ( ! function_exists( 'is_multisite' ) ) {
+    function is_multisite() {
+        return false;
+    }
+}
+
 if ( ! function_exists( 'wp_json_encode' ) ) {
     function wp_json_encode( $data ) {
         return json_encode( $data );
