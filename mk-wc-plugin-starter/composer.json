@@ -1,0 +1,16 @@
+{
+  "name": "motherknitter/mk-wc-plugin-starter",
+  "description": "Hooks-first, class-based starter for WordPress + WooCommerce plugins.",
+  "type": "wordpress-plugin",
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "MK\\\\WcPluginStarter\\\\": "src/"
+    }
+  },
+  "scripts": {
+    "autoload": "composer dump-autoload -o"
+  }
+}
