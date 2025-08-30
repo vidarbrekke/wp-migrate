@@ -116,8 +116,8 @@ final class Api implements Registrable {
                 'url'    => \get_site_url(),
                 'wp'     => \get_bloginfo( 'version' ),
                 'db'     => 'mysql',
-                'prefix' => \is_multisite() ? \get_site_option( 'base_prefix' ) : $GLOBALS['wpdb']->prefix,
-                'charset'=> $GLOBALS['wpdb']->charset,
+                'prefix' => \is_multisite() ? \get_site_option( 'base_prefix' ) : ($GLOBALS['wpdb']->prefix ?? ''),
+                'charset'=> $GLOBALS['wpdb']->charset ?? '',
             ];
             return new WP_REST_Response( [ 'ok' => true, 'site' => $site, 'capabilities' => $cap ] );
         } );
@@ -127,18 +127,19 @@ final class Api implements Registrable {
         return $this->with_auth( $request, function () use ( $request ) {
             $action = (string) ( $request->get_param( 'action' ) ?? '' );
             $jobId = (string) ( $request->get_param( 'job_id' ) ?? '' );
-            
+
+            // Wrap critical operations with retry logic
+            $retryableActions = ['db_import', 'search_replace', 'finalize'];
+
+            if ( in_array( $action, $retryableActions, true ) ) {
+                return $this->execute_with_retry( $action, $jobId, $request );
+            }
+
             switch ( $action ) {
                 case 'health':
                     return $this->handle_health( $jobId );
                 case 'prepare':
                     return $this->handle_prepare( $jobId, $request );
-                case 'db_import':
-                    return $this->handle_db_import( $jobId, $request );
-                case 'search_replace':
-                    return $this->handle_search_replace( $jobId, $request );
-                case 'finalize':
-                    return $this->handle_finalize( $jobId, $request );
                 case 'rollback':
                     return $this->handle_rollback( $jobId, $request );
                 default:
@@ -227,6 +228,44 @@ final class Api implements Registrable {
                 'notes' => [ 'Database export completed successfully' ]
             ] );
         } );
+    }
+
+    /**
+     * Execute action with automatic retry logic
+     */
+    private function execute_with_retry( string $action, string $jobId, WP_REST_Request $request ): WP_REST_Response {
+        try {
+            return $this->jobs->execute_with_retry(
+                function () use ( $action, $jobId, $request ) {
+                    switch ( $action ) {
+                        case 'db_import':
+                            return $this->handle_db_import( $jobId, $request );
+                        case 'search_replace':
+                            return $this->handle_search_replace( $jobId, $request );
+                        case 'finalize':
+                            return $this->handle_finalize( $jobId, $request );
+                        default:
+                            throw new \InvalidArgumentException( 'Unsupported retryable action: ' . $action );
+                    }
+                },
+                $jobId,
+                $action
+            );
+        } catch ( \Throwable $e ) {
+            // Record the error for potential future retry
+            $this->jobs->record_error( $jobId, $e->getMessage(), [
+                'action' => $action,
+                'exception_type' => get_class( $e ),
+                'http_code' => $e->getCode()
+            ]);
+
+            return new WP_REST_Response( [
+                'ok' => false,
+                'code' => 'ERETRY_FAILED',
+                'message' => 'Operation failed after retries: ' . $e->getMessage(),
+                'retry_stats' => $this->jobs->get_retry_stats( $jobId )
+            ], 500 );
+        }
     }
 
     private function error_to_response( WP_Error $err, string $fallbackCode ) {

@@ -5,9 +5,11 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 use WpMigrate\State\StateStore;
 use WpMigrate\Logging\JsonLogger;
+use WpMigrate\Migration\ErrorRecovery;
 
 final class JobManager {
 	private StateStore $store;
+	private ErrorRecovery $errorRecovery;
 
 	/**
 	 * Valid state transitions for the migration workflow
@@ -28,8 +30,9 @@ final class JobManager {
 		'done'          => [], // Terminal state
 	];
 
-	public function __construct( StateStore $store ) {
+	public function __construct( StateStore $store, ?ErrorRecovery $errorRecovery = null ) {
 		$this->store = $store;
+		$this->errorRecovery = $errorRecovery ?? new ErrorRecovery();
 	}
 
 	/** @return array<string,mixed> */
@@ -101,26 +104,60 @@ final class JobManager {
 	}
 
 	/**
-	 * Record an error in the job
+	 * Record an error in the job with automatic recovery consideration
 	 */
 	public function record_error( string $jobId, string $error, array $context = [] ): void {
 		$job = $this->get_or_create( $jobId );
 
-		$job['errors'][] = [
+		$errorEntry = [
 			'message' => $error,
 			'context' => $context,
 			'timestamp' => gmdate( 'c' ),
-			'state' => $job['state'] ?? 'unknown'
+			'state' => $job['state'] ?? 'unknown',
+			'is_recoverable' => $this->errorRecovery->is_recoverable_error( $error, $context )
 		];
+
+		$job['errors'][] = $errorEntry;
 
 		$this->store->put_job( $jobId, $job );
 
-		// Log error
+		// Log error with recovery information
 		$logger = new JsonLogger( $jobId );
-		$logger->log( 'error_recorded', 'error', "Job error recorded: {$error}", [
+		$logger->log( 'error_recorded', $errorEntry['is_recoverable'] ? 'warning' : 'error', "Job error recorded: {$error}", [
 			'error' => $error,
-			'context' => $context
+			'context' => $context,
+			'is_recoverable' => $errorEntry['is_recoverable']
 		]);
+	}
+
+	/**
+	 * Execute operation with automatic retry logic
+	 */
+	public function execute_with_retry( callable $operation, string $jobId, string $operationName ) {
+		return $this->errorRecovery->execute_with_retry( $operation, $jobId, $operationName );
+	}
+
+	/**
+	 * Check if job should be automatically retried
+	 */
+	public function should_retry_job( string $jobId ): bool {
+		$job = $this->get_or_create( $jobId );
+		return $this->errorRecovery->should_retry_job( $jobId, $job );
+	}
+
+	/**
+	 * Schedule automatic retry for failed job
+	 */
+	public function schedule_automatic_retry( string $jobId ): int {
+		$job = $this->get_or_create( $jobId );
+		return $this->errorRecovery->schedule_retry( $jobId, $job );
+	}
+
+	/**
+	 * Get retry statistics for the job
+	 */
+	public function get_retry_stats( string $jobId ): array {
+		return $this->errorRecovery->get_retry_stats( $jobId );
 	}
 
 	/**

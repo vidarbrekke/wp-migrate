@@ -7,6 +7,8 @@ use WpMigrate\Contracts\Registrable;
 use WpMigrate\Admin\SettingsPage;
 use WpMigrate\Rest\Api;
 use WpMigrate\Security\HmacAuth;
+use WpMigrate\State\StateStore;
+use WpMigrate\Migration\JobManager;
 
 final class Plugin {
     /** @var array<int, Registrable> */
@@ -28,7 +30,10 @@ final class Plugin {
 
     private function register_services(): void {
         // Core services
-        $settings = new SettingsPage();
+        $stateStore = new StateStore();
+        $errorRecovery = new \WpMigrate\Migration\ErrorRecovery();
+        $jobManager = new JobManager( $stateStore, $errorRecovery );
+        $settings = new SettingsPage( $jobManager );
         
         $auth = new HmacAuth( function () use ( $settings ) {
             $opts = $settings->get_settings();
