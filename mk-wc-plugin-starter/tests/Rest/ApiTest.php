@@ -318,7 +318,7 @@ class ApiTest extends TestCase
         $data = $result->get_data();
         $this->assertTrue($data['ok']);
         $this->assertEquals('done', $data['state']);
-        $this->assertStringContains('Migration completed successfully', $data['notes'][0]);
+        		$this->assertStringContainsString('Migration completed successfully', $data['notes'][0]);
     }
 
     /**
@@ -346,7 +346,7 @@ class ApiTest extends TestCase
         $data = $result->get_data();
         $this->assertFalse($data['ok']);
         $this->assertEquals('EUNKNOWN_ACTION', $data['code']);
-        $this->assertStringContains('Unknown action: unknown_action', $data['message']);
+        		$this->assertStringContainsString('Unknown action: unknown_action', $data['message']);
     }
 
     /**
