@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 use MK\WcPluginStarter\Files\ChunkStore;
 use MK\WcPluginStarter\Logging\JsonLogger;
 
-final class DatabaseExporter {
+class DatabaseExporter {
     private ChunkStore $chunks;
 
     public function __construct( ChunkStore $chunks ) {

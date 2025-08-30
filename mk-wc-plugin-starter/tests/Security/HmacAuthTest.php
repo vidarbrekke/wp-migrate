@@ -92,7 +92,7 @@ class HmacAuthTest extends TestCase
 
         $this->assertInstanceOf(WP_Error::class, $result);
         $this->assertEquals('EAUTH', $result->get_error_code());
-        $this->assertStringContains('Missing auth headers', $result->get_error_message());
+        		$this->assertStringContainsString('Missing auth headers', $result->get_error_message());
     }
 
     /**
@@ -174,7 +174,7 @@ class HmacAuthTest extends TestCase
 
         $this->assertInstanceOf(WP_Error::class, $result);
         $this->assertEquals('EAUTH', $result->get_error_code());
-        $this->assertStringContains('Invalid signature', $result->get_error_message());
+        		$this->assertStringContainsString('Invalid signature', $result->get_error_message());
     }
 
     /**
@@ -196,7 +196,7 @@ class HmacAuthTest extends TestCase
 
         $this->assertInstanceOf(WP_Error::class, $result);
         $this->assertEquals('EAUTH', $result->get_error_code());
-        $this->assertStringContains('Peer mismatch', $result->get_error_message());
+        		$this->assertStringContainsString('Peer mismatch', $result->get_error_message());
     }
 
     /**

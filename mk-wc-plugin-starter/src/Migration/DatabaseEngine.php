@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 use MK\WcPluginStarter\Files\ChunkStore;
 use \WP_Error;
 
-final class DatabaseEngine {
+class DatabaseEngine {
     private ChunkStore $chunks;
     private DatabaseExporter $exporter;
     private DatabaseImporter $importer;
