@@ -290,6 +290,29 @@ class ApiTest extends TestCase
      */
     public function test_command_finalize_success(): void
     {
+        // Set up job in the correct state for finalization using reflection to access the JobManager
+        $reflection = new \ReflectionClass($this->api);
+        $jobManagerProperty = $reflection->getProperty('jobs');
+        $jobManagerProperty->setAccessible(true);
+        $jobManager = $jobManagerProperty->getValue($this->api);
+
+        // First ensure the job exists in 'created' state
+        $job = $jobManager->get_or_create($this->testJobId);
+        $this->assertEquals('created', $job['state']);
+
+        // Set the job through proper state transitions for finalization testing
+        $jobManager->set_state($this->testJobId, 'preflight_ok', []);
+        $jobManager->set_state($this->testJobId, 'files_pass1', []);
+        $jobManager->set_state($this->testJobId, 'db_exported', []);
+        $jobManager->set_state($this->testJobId, 'db_uploaded', []);
+        $jobManager->set_state($this->testJobId, 'db_imported', []);
+        $jobManager->set_state($this->testJobId, 'url_replaced', []);
+        $jobManager->set_state($this->testJobId, 'files_pass2', []);
+        $jobManager->set_state($this->testJobId, 'finalized', [
+            'files_pass2_completed' => true,
+            'url_replacement_completed' => true
+        ]);
+
         $params = ['action' => 'finalize', 'job_id' => $this->testJobId, 'params' => []];
         $body = wp_json_encode($params);
         $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $body, $this->peerUrl);
@@ -310,7 +333,7 @@ class ApiTest extends TestCase
         $data = $result->get_data();
         $this->assertTrue($data['ok']);
         $this->assertEquals('done', $data['state']);
-        		$this->assertStringContainsString('Migration completed successfully', $data['notes'][0]);
+        $this->assertStringContainsString('Migration completed successfully', $data['notes'][0]);
     }
 
     /**
