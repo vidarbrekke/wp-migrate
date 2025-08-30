@@ -92,6 +92,22 @@ final class Api implements Registrable {
                 'artifact' => [ 'required' => false, 'type' => 'string', 'default' => 'db_dump.sql.zst' ],
             ],
         ] );
+
+        \register_rest_route( 'migrate/v1', '/monitor', [
+            'methods'  => 'GET',
+            'callback' => [ $this, 'monitor' ],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'job_id' => [ 'required' => true, 'type' => 'string' ],
+                'since' => [ 'required' => false, 'type' => 'integer', 'default' => 0 ],
+            ],
+        ] );
+
+        \register_rest_route( 'migrate/v1', '/jobs/active', [
+            'methods'  => 'GET',
+            'callback' => [ $this, 'active_jobs' ],
+            'permission_callback' => '__return_true',
+        ] );
     }
 
     public function handshake( WP_REST_Request $request ) {
@@ -226,6 +242,77 @@ final class Api implements Registrable {
                 'method' => $result['method'] ?? 'unknown',
                 'artifact' => $artifact,
                 'notes' => [ 'Database export completed successfully' ]
+            ] );
+        } );
+    }
+
+    public function monitor( WP_REST_Request $request ) {
+        return $this->with_auth( $request, function () use ( $request ) {
+            $jobId = (string) ( $request->get_param( 'job_id' ) ?? '' );
+            $since = (int) ( $request->get_param( 'since' ) ?? 0 );
+
+            if ( $jobId === '' ) {
+                return new WP_REST_Response( [ 'ok' => false, 'code' => 'EBAD_REQUEST', 'message' => 'job_id is required' ], 400 );
+            }
+
+            $job = $this->jobs->get_progress( $jobId );
+
+            // Get recent logs since timestamp
+            $logger = new JsonLogger( $jobId );
+            $recentLogs = $logger->tail( 50 ); // Get last 50 log entries
+
+            // Filter logs by timestamp if since is provided
+            if ( $since > 0 ) {
+                $recentLogs = array_filter( $recentLogs, function ( $log ) use ( $since ) {
+                    return isset( $log['ts'] ) && strtotime( $log['ts'] ) > $since;
+                } );
+            }
+
+            $retryStats = $this->jobs->get_retry_stats( $jobId );
+
+            return new WP_REST_Response( [
+                'ok' => true,
+                'job' => $job,
+                'logs' => array_values( $recentLogs ), // Re-index array
+                'retry_stats' => $retryStats,
+                'timestamp' => time(),
+                'server_time' => gmdate( 'c' )
+            ] );
+        } );
+    }
+
+    public function active_jobs( WP_REST_Request $request ) {
+        return $this->with_auth( $request, function () {
+            global $wpdb;
+
+            // Get all active job IDs from database
+            $jobOptions = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT option_name FROM {$wpdb->options}
+                     WHERE option_name LIKE %s
+                     AND option_value NOT LIKE %s",
+                    'wp_migrate_job_%',
+                    '%"state":"done"%'
+                ),
+                ARRAY_A
+            );
+
+            $activeJobs = [];
+            foreach ( $jobOptions as $option ) {
+                $jobId = str_replace( 'wp_migrate_job_', '', $option['option_name'] );
+                $progress = $this->jobs->get_progress( $jobId );
+
+                // Only include jobs that are not in terminal states
+                if ( ! in_array( $progress['state'], ['done', 'rolled_back'], true ) ) {
+                    $activeJobs[] = $progress;
+                }
+            }
+
+            return new WP_REST_Response( [
+                'ok' => true,
+                'active_jobs' => $activeJobs,
+                'count' => count( $activeJobs ),
+                'timestamp' => time()
             ] );
         } );
     }

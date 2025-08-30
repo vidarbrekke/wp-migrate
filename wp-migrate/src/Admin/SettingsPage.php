@@ -21,6 +21,7 @@ final class SettingsPage implements Registrable {
         \add_action( 'admin_init', [ $this, 'register_settings' ] );
         \add_action( 'admin_init', [ $this, 'handle_emergency_actions' ] );
         \add_action( 'admin_notices', [ $this, 'show_admin_notices' ] );
+        \add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_monitoring_scripts' ] );
     }
 
     /**
@@ -159,6 +160,15 @@ final class SettingsPage implements Registrable {
             'manage_options',
             'wp_migrate',
             [ $this, 'render_page' ]
+        );
+
+        \add_submenu_page(
+            'options-general.php',
+            \__( 'Migration Monitor', 'wp-migrate' ),
+            \__( 'Monitor', 'wp-migrate' ),
+            'manage_options',
+            'wp_migrate_monitor',
+            [ $this, 'render_monitor_page' ]
         );
     }
 
@@ -442,6 +452,207 @@ final class SettingsPage implements Registrable {
         }
 
         return date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $date );
+    }
+
+    /**
+     * Enqueue monitoring scripts and styles
+     */
+    public function enqueue_monitoring_scripts( $hook ): void {
+        if ( $hook !== 'settings_page_wp_migrate_monitor' ) {
+            return;
+        }
+
+        \wp_enqueue_script(
+            'wp-migrate-monitor',
+            \plugin_dir_url( WP_MIGRATE_FILE ) . 'assets/js/monitor.js',
+            [ 'jquery' ],
+            '1.0.0',
+            true
+        );
+
+        \wp_enqueue_style(
+            'wp-migrate-monitor',
+            \plugin_dir_url( WP_MIGRATE_FILE ) . 'assets/css/monitor.css',
+            [],
+            '1.0.0'
+        );
+
+        \wp_localize_script( 'wp-migrate-monitor', 'wpMigrateMonitor', [
+            'ajaxUrl' => \admin_url( 'admin-ajax.php' ),
+            'nonce' => \wp_create_nonce( 'wp_migrate_monitor' ),
+            'strings' => [
+                'connecting' => \__( 'Connecting...', 'wp-migrate' ),
+                'connected' => \__( 'Connected', 'wp-migrate' ),
+                'disconnected' => \__( 'Disconnected', 'wp-migrate' ),
+                'reconnecting' => \__( 'Reconnecting...', 'wp-migrate' ),
+                'error' => \__( 'Connection Error', 'wp-migrate' ),
+                'no_active_jobs' => \__( 'No active migrations', 'wp-migrate' ),
+                'monitoring_job' => \__( 'Monitoring job:', 'wp-migrate' ),
+                'stop_monitoring' => \__( 'Stop Monitoring', 'wp-migrate' ),
+                'view_logs' => \__( 'View Full Logs', 'wp-migrate' ),
+                'emergency_stop' => \__( 'Emergency Stop', 'wp-migrate' ),
+                'rollback' => \__( 'Rollback', 'wp-migrate' ),
+            ]
+        ] );
+    }
+
+    /**
+     * Render the monitoring dashboard page
+     */
+    public function render_monitor_page(): void {
+        if ( ! \current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        $activeJobs = $this->get_active_jobs();
+
+        ?>
+        <div class="wrap">
+            <h1><?php \esc_html_e( 'WP-Migrate Monitor', 'wp-migrate' ); ?></h1>
+
+            <div class="wp-migrate-monitor-header" style="background: white; padding: 20px; margin: 20px 0; border: 1px solid #ddd; border-radius: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 style="margin: 0;"><?php \esc_html_e( 'Real-time Migration Monitoring', 'wp-migrate' ); ?></h2>
+                        <p style="margin: 5px 0 0 0; color: #666;">
+                            <?php \esc_html_e( 'Monitor active migrations with live progress updates and real-time logging.', 'wp-migrate' ); ?>
+                        </p>
+                    </div>
+                    <div class="wp-migrate-connection-status" style="text-align: right;">
+                        <div class="connection-indicator" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #ccc; margin-right: 8px;"></div>
+                        <span class="connection-text"><?php \esc_html_e( 'Disconnected', 'wp-migrate' ); ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wp-migrate-monitor-content">
+                <div class="wp-migrate-active-jobs" style="margin-bottom: 20px;">
+                    <h3><?php \esc_html_e( 'Active Jobs', 'wp-migrate' ); ?> <span class="job-count">(<?php echo count( $activeJobs ); ?>)</span></h3>
+
+                    <?php if ( empty( $activeJobs ) ): ?>
+                        <div class="wp-migrate-no-jobs" style="background: #f8f9fa; padding: 40px; text-align: center; border: 2px dashed #dee2e6; border-radius: 4px;">
+                            <p style="margin: 0; color: #6c757d; font-size: 16px;">
+                                <?php \esc_html_e( 'No active migrations running.', 'wp-migrate' ); ?>
+                            </p>
+                            <p style="margin: 10px 0 0 0; color: #6c757d;">
+                                <a href="<?php echo \admin_url( 'options-general.php?page=wp_migrate' ); ?>">
+                                    <?php \esc_html_e( 'Go to settings to configure a new migration', 'wp-migrate' ); ?>
+                                </a>
+                            </p>
+                        </div>
+                    <?php else: ?>
+                        <div class="wp-migrate-job-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+                            <?php foreach ( $activeJobs as $job ): ?>
+                                <div class="wp-migrate-job-card" style="background: white; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+                                    <div class="job-header" style="background: #f8f9fa; padding: 15px; border-bottom: 1px solid #eee;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <h4 style="margin: 0; font-size: 16px;">
+                                                <?php printf( \esc_html__( 'Job: %s', 'wp-migrate' ), \esc_html( $job['job_id'] ) ); ?>
+                                            </h4>
+                                            <span class="job-state-badge" style="padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; <?php echo $this->get_state_style( $job['state'] ); ?>">
+                                                <?php echo \esc_html( \strtoupper( $job['state'] ) ); ?>
+                                            </span>
+                                        </div>
+                                        <div style="margin-top: 10px;">
+                                            <div class="progress-bar" style="background: #f1f1f1; height: 8px; border-radius: 4px; overflow: hidden;">
+                                                <div class="progress-fill" style="background: <?php echo $this->get_progress_color( $job['progress'] ); ?>; height: 100%; width: <?php echo (int) $job['progress']; ?>%; transition: width 0.3s ease;"></div>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 12px; color: #666;">
+                                                <span><?php printf( \esc_html__( '%d%% complete', 'wp-migrate' ), (int) $job['progress'] ); ?></span>
+                                                <span><?php echo \esc_html( $this->format_timestamp( $job['updated_at'] ) ); ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="job-details" style="padding: 15px;">
+                                        <div class="job-info" style="margin-bottom: 15px;">
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+                                                <div><strong><?php \esc_html_e( 'Started:', 'wp-migrate' ); ?></strong> <?php echo \esc_html( $this->format_timestamp( $job['created_at'] ) ); ?></div>
+                                                <div><strong><?php \esc_html_e( 'State:', 'wp-migrate' ); ?></strong> <?php echo \esc_html( $job['state'] ); ?></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="job-actions" style="border-top: 1px solid #eee; padding-top: 15px;">
+                                            <button class="button button-primary monitor-job-btn" data-job-id="<?php echo \esc_attr( $job['job_id'] ); ?>">
+                                                <?php \esc_html_e( 'Monitor This Job', 'wp-migrate' ); ?>
+                                            </button>
+                                            <a href="<?php echo \esc_url( \admin_url( 'admin-ajax.php?action=wp_migrate_logs&job_id=' . \urlencode( $job['job_id'] ) ) ); ?>"
+                                               class="button button-secondary" style="margin-left: 10px;" target="_blank">
+                                                <?php \esc_html_e( 'View Logs', 'wp-migrate' ); ?>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="wp-migrate-job-monitor" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3><?php \esc_html_e( 'Job Monitor', 'wp-migrate' ); ?> <span class="monitored-job-id"></span></h3>
+                        <button class="button button-secondary stop-monitoring-btn">
+                            <?php \esc_html_e( 'Stop Monitoring', 'wp-migrate' ); ?>
+                        </button>
+                    </div>
+
+                    <div class="monitor-panels" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                        <div class="monitor-main">
+                            <div class="monitor-progress" style="background: white; padding: 20px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 20px;">
+                                <h4><?php \esc_html_e( 'Progress', 'wp-migrate' ); ?></h4>
+                                <div class="progress-details">
+                                    <div class="current-state" style="margin-bottom: 15px;">
+                                        <strong><?php \esc_html_e( 'Current State:', 'wp-migrate' ); ?></strong>
+                                        <span class="state-value">-</span>
+                                    </div>
+                                    <div class="progress-bar-large" style="background: #f1f1f1; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 10px;">
+                                        <div class="progress-fill-large" style="background: #007cba; height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                                    </div>
+                                    <div class="progress-text" style="text-align: center; font-weight: bold;">0%</div>
+                                </div>
+                            </div>
+
+                            <div class="monitor-logs" style="background: white; padding: 20px; border: 1px solid #ddd; border-radius: 4px;">
+                                <h4><?php \esc_html_e( 'Recent Activity', 'wp-migrate' ); ?></h4>
+                                <div class="logs-container" style="max-height: 400px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px;">
+                                    <div class="no-logs" style="color: #6c757d; text-align: center; padding: 20px;">
+                                        <?php \esc_html_e( 'Waiting for activity...', 'wp-migrate' ); ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="monitor-sidebar">
+                            <div class="retry-stats" style="background: white; padding: 20px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 20px;">
+                                <h4><?php \esc_html_e( 'Retry Statistics', 'wp-migrate' ); ?></h4>
+                                <div class="stats-content">
+                                    <div class="stat-item"><strong><?php \esc_html_e( 'Total Retries:', 'wp-migrate' ); ?></strong> <span class="total-retries">0</span></div>
+                                    <div class="stat-item"><strong><?php \esc_html_e( 'Successful:', 'wp-migrate' ); ?></strong> <span class="successful-retries">0</span></div>
+                                    <div class="stat-item"><strong><?php \esc_html_e( 'Failed:', 'wp-migrate' ); ?></strong> <span class="failed-retries">0</span></div>
+                                    <div class="stat-item"><strong><?php \esc_html_e( 'Backoff Time:', 'wp-migrate' ); ?></strong> <span class="backoff-time">0s</span></div>
+                                </div>
+                            </div>
+
+                            <div class="emergency-actions" style="background: #fff3cd; padding: 20px; border: 1px solid #ffeaa7; border-radius: 4px;">
+                                <h4 style="color: #856404; margin-top: 0;">🚨 <?php \esc_html_e( 'Emergency Actions', 'wp-migrate' ); ?></h4>
+                                <p style="color: #856404; margin-bottom: 15px; font-size: 14px;">
+                                    <?php \esc_html_e( 'Use these controls only in emergency situations.', 'wp-migrate' ); ?>
+                                </p>
+                                <div class="emergency-buttons">
+                                    <button class="button button-secondary emergency-stop-btn" style="background: #dc3545; border-color: #dc3545; color: white; margin-right: 10px;" disabled>
+                                        <?php \esc_html_e( 'Stop Migration', 'wp-migrate' ); ?>
+                                    </button>
+                                    <button class="button button-secondary emergency-rollback-btn" style="background: #ffc107; border-color: #ffc107; color: black;" disabled>
+                                        <?php \esc_html_e( 'Rollback', 'wp-migrate' ); ?>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
     }
 
     /**
