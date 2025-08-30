@@ -25,11 +25,11 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 NC='\033[0m' # No Color
 
-# Configuration - UPDATED FOR PRODUCTION DEPLOYMENT
+# Configuration - UPDATED FOR STAGING DEPLOYMENT
 STAGING_SERVER="45.33.31.79"
-STAGING_USER="motherknitter"
-STAGING_SSH_KEY="/Users/vidarbrekke/Dev/socialintent/motherknitter.pem"
-STAGING_PATH="/home/motherknitter/public_html/wp-content/plugins"
+STAGING_USER="staging"
+STAGING_SSH_KEY="/Users/vidarbrekke/Dev/socialintent/staging.motherknitter.pem"
+STAGING_PATH="/home/staging/public_html/wp-content/plugins"
 PLUGIN_NAME="wp-migrate"
 
 # Functions
@@ -58,7 +58,7 @@ create_backup() {
     print_step "Creating backup of current plugin..."
 
     ssh -i "$STAGING_SSH_KEY" "$STAGING_USER@$STAGING_SERVER" << 'EOF'
-        cd /home/motherknitter/public_html/wp-content/plugins/
+        cd /home/staging/public_html/wp-content/plugins/
 
         # Create timestamped backup if plugin exists
         if [ -d "wp-migrate" ]; then
@@ -86,14 +86,14 @@ pre_deployment_check() {
         echo "🔍 Checking server health..."
 
         # Check if WordPress directory exists
-        if [ ! -d "/home/motherknitter/public_html" ]; then
-            echo "❌ WordPress directory not found: /home/motherknitter/public_html"
+        if [ ! -d "/home/staging/public_html" ]; then
+            echo "❌ WordPress directory not found: /home/staging/public_html"
             exit 1
         fi
 
         # Check if plugins directory exists and is writable
-        if [ ! -w "/home/motherknitter/public_html/wp-content/plugins" ]; then
-            echo "❌ Plugins directory not writable: /home/motherknitter/public_html/wp-content/plugins"
+        if [ ! -w "/home/staging/public_html/wp-content/plugins" ]; then
+            echo "❌ Plugins directory not writable: /home/staging/public_html/wp-content/plugins"
             exit 1
         fi
 
@@ -130,7 +130,7 @@ rollback_deployment() {
     print_step "Rolling back deployment..."
 
     ssh -i "$STAGING_SSH_KEY" "$STAGING_USER@$STAGING_SERVER" << 'EOF'
-        cd /home/motherknitter/public_html/wp-content/plugins/
+        cd /home/staging/public_html/wp-content/plugins/
 
         echo "🔄 Looking for latest backup..."
 
@@ -145,8 +145,8 @@ rollback_deployment() {
         echo "📦 Rolling back to: $LATEST_BACKUP"
 
         # Deactivate current plugin
-        if wp plugin is-active wp-migrate --path=/home/motherknitter/public_html/ 2>/dev/null; then
-            wp plugin deactivate wp-migrate --path=/home/motherknitter/public_html/
+        if wp plugin is-active wp-migrate --path=/home/staging/public_html/ 2>/dev/null; then
+            wp plugin deactivate wp-migrate --path=/home/staging/public_html/
         fi
 
         # Remove current plugin and restore from backup
@@ -154,7 +154,7 @@ rollback_deployment() {
         cp -r "$LATEST_BACKUP" wp-migrate
 
         # Reactivate plugin
-        wp plugin activate wp-migrate --path=/home/motherknitter/public_html/
+        wp plugin activate wp-migrate --path=/home/staging/public_html/
 
         echo "✅ Rollback completed successfully!"
         echo "🔄 Plugin restored from backup: $LATEST_BACKUP"
@@ -163,12 +163,12 @@ EOF
 
 # Check if deployment package exists
 check_package() {
-    if [ ! -f "wp-migrate-plugin-production.zip" ]; then
-        print_error "Deployment package not found: wp-migrate-plugin-production.zip"
+    if [ ! -f "wp-migrate-plugin-staging.zip" ]; then
+        print_error "Deployment package not found: wp-migrate-plugin-staging.zip"
         print_error "Run this script from the project root directory"
         exit 1
     fi
-    print_success "Deployment package found: wp-migrate-plugin-production.zip"
+    print_success "Deployment package found: wp-migrate-plugin-staging.zip"
 }
 
 # Check if SSH key exists
@@ -186,7 +186,7 @@ check_ssh_key() {
 upload_package() {
     print_status "Uploading deployment package to staging server..."
 
-    if scp -i "$STAGING_SSH_KEY" wp-migrate-plugin-production.zip "$STAGING_USER@$STAGING_SERVER:$STAGING_PATH/"; then
+    if scp -i "$STAGING_SSH_KEY" wp-migrate-plugin-staging.zip "$STAGING_USER@$STAGING_SERVER:$STAGING_PATH/"; then
         print_success "Package uploaded successfully"
     else
         print_error "Failed to upload package"
@@ -204,15 +204,15 @@ deploy_on_staging() {
         echo "🚀 Starting WordPress plugin deployment..."
 
         # Navigate to plugins directory
-        cd /home/motherknitter/public_html/wp-content/plugins/
+        cd /home/staging/public_html/wp-content/plugins/
 
         # Always do a clean installation to avoid conflicts
         echo "🧹 Preparing clean plugin installation..."
 
         # Check if plugin is active in WordPress and deactivate if needed
-        if wp plugin is-active wp-migrate --path=/home/motherknitter/public_html/ 2>/dev/null; then
+        if wp plugin is-active wp-migrate --path=/home/staging/public_html/ 2>/dev/null; then
             echo "🔌 Deactivating existing plugin..."
-            wp plugin deactivate wp-migrate --path=/home/motherknitter/public_html/
+            wp plugin deactivate wp-migrate --path=/home/staging/public_html/
         fi
 
         # Remove old plugin completely to ensure clean extraction
@@ -222,7 +222,7 @@ deploy_on_staging() {
         # Create plugin directory and extract into it
         echo "📂 Creating plugin directory and extracting..."
         mkdir -p wp-migrate
-        if unzip -o -q wp-migrate-plugin-production.zip -d wp-migrate/; then
+        if unzip -o -q wp-migrate-plugin-staging.zip -d wp-migrate/; then
             echo "✅ Plugin extracted successfully"
         else
             echo "❌ Plugin extraction failed"
@@ -249,7 +249,7 @@ deploy_on_staging() {
         fi
 
         # Clean up deployment package
-        rm wp-migrate-plugin-production.zip
+        rm wp-migrate-plugin-staging.zip
 
         # Get version info for logging
         if [ -f "wp-migrate/VERSION" ]; then
@@ -258,7 +258,7 @@ deploy_on_staging() {
 
             # Log deployment
             TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
-            echo "$TIMESTAMP | $PLUGIN_VERSION | DEPLOYED | Automated deployment to production from local dev" >> wp-migrate/deployments.log
+            echo "$TIMESTAMP | $PLUGIN_VERSION | DEPLOYED | Automated deployment to staging from local dev" >> wp-migrate/deployments.log
             echo "📝 Deployment logged to deployments.log"
         fi
 
@@ -288,7 +288,7 @@ deploy_on_staging() {
 
         # Verify plugin can be loaded
         echo "🔍 Verifying plugin integrity..."
-        if wp plugin verify wp-migrate --path=/home/motherknitter/public_html/ 2>/dev/null; then
+        if wp plugin verify wp-migrate --path=/home/staging/public_html/ 2>/dev/null; then
             echo "✅ Plugin verification passed"
         else
             echo "⚠️  Plugin verification warning (may be normal for custom plugins)"
@@ -305,9 +305,9 @@ run_staging_tests() {
     ssh -i "$STAGING_SSH_KEY" "$STAGING_USER@$STAGING_SERVER" << 'EOF'
         set -e
         
-        echo "🧪 Running tests on production server..."
+        echo "🧪 Running tests on staging server..."
 
-        cd /home/motherknitter/public_html/wp-content/plugins/wp-migrate/
+        cd /home/staging/public_html/wp-content/plugins/wp-migrate/
         
         # Check if tests directory exists
         if [ ! -d "tests" ]; then
@@ -356,7 +356,7 @@ run_staging_tests() {
                 exit 1
             fi
         else
-            echo "ℹ️  Test suite not deployed (production deployment)"
+            echo "ℹ️  Test suite not deployed (staging deployment)"
             echo "💡 Run tests locally: ./run-tests.sh all"
         fi
         
@@ -371,30 +371,30 @@ activate_plugin() {
     ssh -i "$STAGING_SSH_KEY" "$STAGING_USER@$STAGING_SERVER" << 'EOF'
         set -e
 
-        echo "🔌 Activating WP-Migrate plugin on production..."
+        echo "🔌 Activating WP-Migrate plugin on staging..."
 
         # Check if WP-CLI can connect to database
-        if wp db check --path=/home/motherknitter/public_html/ 2>/dev/null; then
+        if wp db check --path=/home/staging/public_html/ 2>/dev/null; then
             echo "✅ Database connection OK"
 
             # Activate plugin using WP-CLI
-            if wp plugin activate wp-migrate --path=/home/motherknitter/public_html/; then
-                echo "✅ Plugin activated successfully on production"
+            if wp plugin activate wp-migrate --path=/home/staging/public_html/; then
+                echo "✅ Plugin activated successfully on staging"
 
                 # Get plugin info
-                wp plugin get wp-migrate --path=/home/motherknitter/public_html/ --format=json | head -20
+                wp plugin get wp-migrate --path=/home/staging/public_html/ --format=json | head -20
 
-                echo "🎯 Plugin is now active on production and ready to use!"
+                echo "🎯 Plugin is now active on staging and ready to use!"
             else
                 echo "❌ Plugin activation failed"
                 echo "🔧 Manual activation required in WordPress admin"
-                echo "🌐 WordPress Admin: https://motherknitter.com/wp-admin/"
+                echo "🌐 WordPress Admin: https://staging.motherknitter.com/wp-admin/"
                 echo "🔧 Go to Plugins → WP-Migrate → Activate"
             fi
         else
             echo "⚠️  WP-CLI database connection issue"
             echo "🔧 Manual activation required in WordPress admin"
-            echo "🌐 WordPress Admin: https://motherknitter.com/wp-admin/"
+            echo "🌐 WordPress Admin: https://staging.motherknitter.com/wp-admin/"
             echo "🔧 Go to Plugins → WP-Migrate → Activate"
             echo ""
             echo "💡 If activation fails, check MySQL extension:"
@@ -424,10 +424,10 @@ increment_version() {
 
 # Main deployment process
 main() {
-    echo "🚀 WP-Migrate Plugin - PRODUCTION DEPLOYMENT"
+    echo "🚀 WP-Migrate Plugin - STAGING DEPLOYMENT"
     echo "============================================"
     echo ""
-    echo "🎯 Target Server: $STAGING_SERVER (Production)"
+    echo "🎯 Target Server: $STAGING_SERVER (Staging)"
     echo "👤 User: $STAGING_USER"
     echo "🔑 SSH Key: $STAGING_SSH_KEY"
     echo "📁 Path: $STAGING_PATH"
@@ -473,7 +473,7 @@ main() {
     # Run tests if available
     run_staging_tests
 
-    print_success "🎉 PRODUCTION DEPLOYMENT COMPLETED SUCCESSFULLY!"
+    print_success "🎉 STAGING DEPLOYMENT COMPLETED SUCCESSFULLY!"
     echo ""
     echo "📋 Deployment Summary:"
     echo "  ✅ Pre-deployment health checks completed"
@@ -485,7 +485,7 @@ main() {
     echo "  ✅ PHP 8.2 environment validated"
     echo "  ✅ Comprehensive tests executed"
     echo ""
-    echo "🔗 WordPress Admin: https://motherknitter.com/wp-admin/"
+    echo "🔗 WordPress Admin: https://staging.motherknitter.com/wp-admin/"
     echo "🔧 Plugin Settings: Settings → WP-Migrate"
     echo ""
     echo "📊 Version Control:"
