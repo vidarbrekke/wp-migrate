@@ -2,6 +2,18 @@
 
 # 🚀 WP-Migrate Plugin - Staging Deployment Script
 # This script automates the deployment process to your staging server
+#
+# Updated: 2025-08-30
+# - Fixed ZIP file structure (removed nested directories)
+# - Updated PHP version detection for PHP 8.2
+# - Added better error handling and logging
+# - Improved deployment verification
+#
+# Requirements:
+# - SSH key access to staging server
+# - WordPress installation at /home/staging/public_html/
+# - PHP 8.2 with MySQL support on staging server
+# - WP-CLI installed on staging server
 
 set -e  # Exit on any error
 
@@ -10,6 +22,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
 NC='\033[0m' # No Color
 
 # Configuration - UPDATED WITH ACTUAL STAGING SERVER DETAILS
@@ -34,6 +47,118 @@ print_warning() {
 
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_step() {
+    echo -e "${PURPLE}[STEP]${NC} $1"
+}
+
+# Create backup of current plugin before deployment
+create_backup() {
+    print_step "Creating backup of current plugin..."
+
+    ssh -i "$STAGING_SSH_KEY" "$STAGING_USER@$STAGING_SERVER" << 'EOF'
+        cd /home/staging/public_html/wp-content/plugins/
+
+        # Create timestamped backup if plugin exists
+        if [ -d "wp-migrate" ]; then
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            BACKUP_NAME="wp-migrate_backup_${TIMESTAMP}"
+
+            echo "📦 Creating backup: $BACKUP_NAME"
+            cp -r wp-migrate "$BACKUP_NAME"
+
+            # Keep only last 3 backups to save space
+            ls -t wp-migrate_backup_* 2>/dev/null | tail -n +4 | xargs -r rm -rf
+
+            echo "✅ Backup created: $BACKUP_NAME"
+        else
+            echo "ℹ️  No existing plugin to backup"
+        fi
+EOF
+}
+
+# Perform pre-deployment health checks
+pre_deployment_check() {
+    print_step "Performing pre-deployment health checks..."
+
+    ssh -i "$STAGING_SSH_KEY" "$STAGING_USER@$STAGING_SERVER" << 'EOF'
+        echo "🔍 Checking server health..."
+
+        # Check if WordPress directory exists
+        if [ ! -d "/home/staging/public_html" ]; then
+            echo "❌ WordPress directory not found: /home/staging/public_html"
+            exit 1
+        fi
+
+        # Check if plugins directory exists and is writable
+        if [ ! -w "/home/staging/public_html/wp-content/plugins" ]; then
+            echo "❌ Plugins directory not writable: /home/staging/public_html/wp-content/plugins"
+            exit 1
+        fi
+
+        # Check PHP version
+        if command -v php8.2 >/dev/null 2>&1; then
+            PHP_VERSION=$(php8.2 -r "echo PHP_VERSION;")
+            echo "✅ PHP 8.2 available: $PHP_VERSION"
+        elif command -v php >/dev/null 2>&1; then
+            PHP_VERSION=$(php -r "echo PHP_VERSION;")
+            echo "⚠️  PHP available (version may not be 8.2): $PHP_VERSION"
+        else
+            echo "❌ PHP not found"
+            exit 1
+        fi
+
+        # Check if unzip is available
+        if ! command -v unzip >/dev/null 2>&1; then
+            echo "❌ unzip command not found"
+            exit 1
+        fi
+
+        # Check WP-CLI
+        if ! command -v wp >/dev/null 2>&1; then
+            echo "❌ WP-CLI not found"
+            exit 1
+        fi
+
+        echo "✅ All health checks passed!"
+EOF
+}
+
+# Rollback function for emergency situations
+rollback_deployment() {
+    print_step "Rolling back deployment..."
+
+    ssh -i "$STAGING_SSH_KEY" "$STAGING_USER@$STAGING_SERVER" << 'EOF'
+        cd /home/staging/public_html/wp-content/plugins/
+
+        echo "🔄 Looking for latest backup..."
+
+        # Find the most recent backup
+        LATEST_BACKUP=$(ls -t wp-migrate_backup_* 2>/dev/null | head -1)
+
+        if [ -z "$LATEST_BACKUP" ]; then
+            echo "❌ No backup found to rollback to"
+            exit 1
+        fi
+
+        echo "📦 Rolling back to: $LATEST_BACKUP"
+
+        # Deactivate current plugin
+        if wp plugin is-active wp-migrate --path=/home/staging/public_html/ 2>/dev/null; then
+            wp plugin deactivate wp-migrate --path=/home/staging/public_html/
+        fi
+
+        # Remove current plugin and restore from backup
+        rm -rf wp-migrate/
+        cp -r "$LATEST_BACKUP" wp-migrate
+
+        # Reactivate plugin
+        wp plugin activate wp-migrate --path=/home/staging/public_html/
+
+        echo "✅ Rollback completed successfully!"
+        echo "🔄 Plugin restored from backup: $LATEST_BACKUP"
+EOF
 }
 
 # Check if deployment package exists
@@ -196,8 +321,8 @@ run_staging_tests() {
             # Pre-flight checks for test environment
             echo "🔍 Validating test environment..."
 
-            if ! command -v php >/dev/null 2>&1; then
-                echo "❌ PHP not found - cannot run tests"
+            if ! command -v php8.2 >/dev/null 2>&1; then
+                echo "❌ PHP 8.2 not found - cannot run tests"
                 exit 1
             fi
 
@@ -207,14 +332,14 @@ run_staging_tests() {
 
             echo "✅ Test environment validated"
             echo "🔐 Running security tests first..."
-            if ./run-tests.sh security; then
+            if php8.2 ./run-tests.sh security; then
                 echo "✅ Security tests passed"
             else
                 echo "⚠️  Security tests failed - please investigate"
             fi
 
             echo "🚀 Running all tests with coverage..."
-            if ./run-tests.sh all; then
+            if php8.2 ./run-tests.sh all; then
                 echo "✅ All tests passed successfully!"
 
                 # Show summary of test results
@@ -308,14 +433,22 @@ main() {
     echo "📁 Path: $STAGING_PATH"
     echo ""
     echo "📋 Deployment Strategy:"
+    echo "  • Pre-deployment health checks and validation"
+    echo "  • Automatic backup creation before deployment"
     echo "  • Single plugin instance (removes old versions)"
     echo "  • Proper WordPress deactivation/activation"
     echo "  • Version management with semantic versioning"
     echo "  • WordPress security best practices"
+    echo "  • PHP 8.2 compatibility verification"
+    echo "  • Comprehensive test execution with coverage"
     echo ""
 
     # Increment version for new deployment
     increment_version
+    echo ""
+
+    # Pre-deployment health checks
+    pre_deployment_check
     echo ""
 
     # Check package
@@ -323,6 +456,10 @@ main() {
 
     # Check SSH key
     check_ssh_key
+
+    # Create backup before deployment
+    create_backup
+    echo ""
 
     # Upload package
     upload_package
@@ -339,10 +476,14 @@ main() {
     print_success "🎉 Production deployment completed successfully!"
     echo ""
     echo "📋 Deployment Summary:"
+    echo "  ✅ Pre-deployment health checks completed"
+    echo "  ✅ Backup created automatically"
     echo "  ✅ Single plugin instance maintained"
     echo "  ✅ WordPress deactivation/activation handled"
     echo "  ✅ Version incremented automatically"
     echo "  ✅ Proper permissions and ownership set"
+    echo "  ✅ PHP 8.2 environment validated"
+    echo "  ✅ Comprehensive tests executed"
     echo ""
     echo "🔗 WordPress Admin: http://45.33.31.79/wp-admin/"
     echo "🔧 Plugin Settings: Settings → WP-Migrate"
@@ -353,5 +494,50 @@ main() {
     echo "  • Plugin header updated automatically"
 }
 
-# Run main function
-main "$@"
+# Handle command line arguments
+if [ $# -gt 0 ]; then
+    case $1 in
+        rollback)
+            print_warning "🚨 ROLLBACK MODE - This will restore the previous plugin version!"
+            echo "Are you sure you want to rollback? (y/N): "
+            read -r confirm
+            if [[ $confirm =~ ^[Yy]$ ]]; then
+                rollback_deployment
+                print_success "✅ Rollback completed!"
+            else
+                print_warning "Rollback cancelled by user"
+                exit 0
+            fi
+            ;;
+        --help|-h)
+            echo "WP-Migrate Deployment Script"
+            echo "==========================="
+            echo ""
+            echo "USAGE:"
+            echo "  ./deploy-to-staging.sh          # Normal deployment"
+            echo "  ./deploy-to-staging.sh rollback # Rollback to previous version"
+            echo "  ./deploy-to-staging.sh --help   # Show this help"
+            echo ""
+            echo "FEATURES:"
+            echo "  • Pre-deployment health checks"
+            echo "  • Automatic backup creation"
+            echo "  • PHP 8.2 compatibility verification"
+            echo "  • Comprehensive test execution"
+            echo "  • Emergency rollback capability"
+            echo ""
+            echo "CONFIGURATION:"
+            echo "  Server: $STAGING_SERVER"
+            echo "  User: $STAGING_USER"
+            echo "  Path: $STAGING_PATH"
+            exit 0
+            ;;
+        *)
+            print_error "Unknown option: $1"
+            print_error "Use './deploy-to-staging.sh --help' for usage information"
+            exit 1
+            ;;
+    esac
+else
+    # Run main function for normal deployment
+    main
+fi
