@@ -4,6 +4,7 @@ namespace MK\WcPluginStarter\Files;
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 final class ChunkStore {
+	private const MAX_CHUNK_SIZE = 64 * 1024 * 1024; // 64MB
 	private string $baseDir;
 
 	public function __construct() {
@@ -55,10 +56,22 @@ final class ChunkStore {
 	}
 
 	public function save_chunk( string $jobId, string $artifact, int $index, string $rawBytes, string $sha256B64 ): void {
+		// Validate chunk size
+		if ( strlen( $rawBytes ) > self::MAX_CHUNK_SIZE ) {
+			throw new \InvalidArgumentException( 'Chunk exceeds maximum size limit' );
+		}
+
+		// Validate path components to prevent directory traversal
+		if ( strpos( $jobId, '..' ) !== false || strpos( $artifact, '..' ) !== false ) {
+			throw new \InvalidArgumentException( 'Invalid path component detected' );
+		}
+
+		// Validate hash
 		$calc = base64_encode( \hash( 'sha256', $rawBytes, true ) );
 		if ( ! \hash_equals( $calc, $sha256B64 ) ) {
 			throw new \RuntimeException( 'Chunk hash mismatch' );
 		}
+
 		$path = $this->chunk_path( $jobId, $artifact, $index );
 		\file_put_contents( $path, $rawBytes );
 	}

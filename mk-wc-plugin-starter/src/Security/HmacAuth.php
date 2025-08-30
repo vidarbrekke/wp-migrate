@@ -35,7 +35,7 @@ final class HmacAuth {
 			return new WP_Error( 'EAUTH', 'Shared key is not configured', [ 'status' => 401 ] );
 		}
 
-		if ( ! \is_ssl() ) {
+		if ( ! $this->is_secure_request() ) {
 			return new WP_Error( 'EUPGRADE_REQUIRED', 'TLS required', [ 'status' => 426 ] );
 		}
 
@@ -108,6 +108,21 @@ final class HmacAuth {
 	private function mark_nonce_used( string $nonce ): void {
 		$key = 'mk_mig_nonce_' . md5( $nonce );
 		\set_transient( $key, 1, self::NONCE_TTL );
+	}
+
+	/**
+	 * Check if request is secure (HTTPS), including proxy scenarios.
+	 */
+	private function is_secure_request(): bool {
+		if ( \is_ssl() ) {
+			return true;
+		}
+
+		// Check common proxy headers
+		$proto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+		$https = $_SERVER['HTTP_X_FORWARDED_SSL'] ?? $_SERVER['HTTP_FRONT_END_HTTPS'] ?? '';
+		
+		return $proto === 'https' || $https === 'on';
 	}
 }
 
