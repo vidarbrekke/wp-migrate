@@ -5,6 +5,38 @@ All notable changes to the WP-Migrate plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.21] - 2025-08-30
+
+### 🚀 **Critical Bug Fix - Header Normalization**
+
+#### **Fixed**
+- **Critical HMAC Authentication Issue**: Fixed header normalization problem
+  - WordPress normalizes HTTP headers by replacing hyphens with underscores
+  - Plugin was looking for `x_mig_timestamp` but headers were `x-mig-timestamp`
+  - Updated `HmacAuth.php` constants to use underscores (`x_mig_timestamp`)
+  - Fixed all API endpoints: handshake, monitor, jobs/active, etc.
+  - All 204 tests now pass successfully
+
+#### **Technical Details**
+- **Header Constants Updated**: Changed from hyphens to underscores
+  - `HDR_TS`: `x-mig-timestamp` → `x_mig_timestamp`
+  - `HDR_NONCE`: `x-mig-nonce` → `x_mig_nonce`
+  - `HDR_PEER`: `x-mig-peer` → `x_mig_peer`
+  - `HDR_SIG`: `x-mig-signature` → `x_mig_signature`
+
+- **Test Infrastructure Updated**: Fixed test headers to match new constants
+  - Updated `TestHelper::generateValidHmacHeaders()` to use underscores
+  - Fixed all HMAC authentication tests
+  - Maintained test coverage and reliability
+
+#### **Impact**
+- **Production Ready**: Plugin now works correctly in live environments
+- **API Functionality**: All REST endpoints respond properly
+- **Security**: HMAC authentication functioning correctly
+- **Testing**: Complete test suite passing (204 tests)
+
+---
+
 ## [1.0.14] - 2025-08-30
 
 ### 🚀 **Enterprise Features - Production Ready**

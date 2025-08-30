@@ -163,11 +163,14 @@ class TestHelper
         $payload = $timestamp . "\n" . $nonce . "\n" . $method . "\n" . $path . "\n" . $bodyHash;
         $signature = base64_encode(hash_hmac('sha256', $payload, $sharedKey, true));
 
+        // Note: WordPress normalizes HTTP header names by replacing hyphens with underscores
+        // So 'X-MIG-Timestamp' becomes 'x_mig_timestamp' in the headers array
+        // The test headers use underscores to match what the code expects after normalization
         return [
-            'x-mig-timestamp' => (string) $timestamp,
-            'x-mig-nonce' => $nonce,
-            'x-mig-peer' => $peer,
-            'x-mig-signature' => $signature,
+            'x_mig_timestamp' => (string) $timestamp,
+            'x_mig_nonce' => $nonce,
+            'x_mig_peer' => $peer,
+            'x_mig_signature' => $signature,
         ];
     }
 
@@ -233,7 +236,7 @@ class TestHelper
                 return addcslashes($text, '_%\\');
             }
 
-            public function get_results(string $query, int $output = OBJECT): array {
+            public function get_results(string $query, int $output = 4): array { // OBJECT = 4 in WordPress
                 // Return mock results for URL replacement tests
                 if (strpos($query, 'LIKE') !== false) {
                     return [

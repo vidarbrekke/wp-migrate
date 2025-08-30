@@ -166,7 +166,7 @@ class HmacAuthTest extends TestCase
     public function test_verify_request_invalid_signature(): void
     {
         $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey);
-        $headers['x-mig-signature'] = 'invalid-signature-123'; // Tamper with signature
+        $headers['x_mig_signature'] = 'invalid-signature-123'; // Tamper with signature
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers);
 
@@ -367,7 +367,7 @@ class HmacAuthTest extends TestCase
     public function test_verify_request_malformed_headers(): void
     {
         $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey);
-        $headers['x-mig-timestamp'] = 'invalid-timestamp'; // Non-numeric timestamp
+        $headers['x_mig_timestamp'] = 'invalid-timestamp'; // Non-numeric timestamp
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers);
 

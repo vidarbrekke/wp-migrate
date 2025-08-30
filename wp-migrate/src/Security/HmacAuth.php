@@ -7,10 +7,15 @@ use \WP_Error;
 use \WP_REST_Request;
 
 class HmacAuth {
-	const HDR_TS = 'x-mig-timestamp';
-	const HDR_NONCE = 'x-mig-nonce';
-	const HDR_PEER = 'x-mig-peer';
-	const HDR_SIG = 'x-mig-signature';
+	/**
+	 * Header constants for HMAC authentication
+	 * Note: WordPress normalizes HTTP headers by replacing hyphens with underscores
+	 * So 'X-MIG-Timestamp' becomes 'x_mig_timestamp' in the headers array
+	 */
+	const HDR_TS = 'x_mig_timestamp';
+	const HDR_NONCE = 'x_mig_nonce';
+	const HDR_PEER = 'x_mig_peer';
+	const HDR_SIG = 'x_mig_signature';
 	const MAX_SKEW_MS = 5 * 60 * 1000; // 5 minutes as per specification
 	const NONCE_TTL = 3600; // seconds
 
@@ -95,7 +100,10 @@ class HmacAuth {
 	private function lowercase_headers( array $headers ): array {
 		$out = [];
 		foreach ( $headers as $k => $v ) {
-			$out[ strtolower( (string) $k ) ] = $v;
+			// WordPress normalizes header names by replacing hyphens with underscores
+			// So 'X-MIG-Timestamp' becomes 'x_mig_timestamp' in the headers array
+			$normalizedKey = strtolower( (string) $k );
+			$out[ $normalizedKey ] = $v;
 		}
 		return $out;
 	}
