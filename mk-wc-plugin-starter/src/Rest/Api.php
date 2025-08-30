@@ -28,6 +28,13 @@ final class Api implements Registrable {
         $this->dbEngine = $dbEngine ?? new DatabaseEngine( $this->chunks );
     }
 
+    /**
+     * Get JobManager instance for testing
+     */
+    public function get_job_manager(): JobManager {
+        return $this->jobs;
+    }
+
     public function register(): void {
         \add_action( 'rest_api_init', [ $this, 'register_routes' ] );
     }

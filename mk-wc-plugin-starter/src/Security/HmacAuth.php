@@ -49,13 +49,12 @@ class HmacAuth {
 			return new WP_Error( 'EAUTH', 'Missing auth headers', [ 'status' => 401 ] );
 		}
 
-		// Time skew (disabled for testing)
+		// Time skew validation
 		$nowMs = (int) \round( microtime( true ) * 1000 );
 		$ts = (int) $tsStr;
-		// Temporarily disable timestamp validation for testing
-		// if ( \abs( $nowMs - $ts ) > (self::MAX_SKEW_MS * 100) ) { // Allow 100x more skew for testing
-		//     return new WP_Error( 'ETS_SKEW', 'Timestamp skew too large', [ 'status' => 401 ] );
-		// }
+		if ( \abs( $nowMs - $ts ) > self::MAX_SKEW_MS ) {
+			return new WP_Error( 'ETS_SKEW', 'Timestamp skew too large', [ 'status' => 401 ] );
+		}
 
 		// Nonce replay check (1h window)
 		if ( $this->is_nonce_used( $nonce ) ) {

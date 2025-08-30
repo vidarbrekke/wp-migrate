@@ -181,21 +181,8 @@ class TestHelper
         string $body = '',
         string $peer = 'https://test.example.com'
     ): array {
-        // Always use current server time for live testing
-        $timestamp = (int) (time() * 1000);
-        
-        $nonce = bin2hex(random_bytes(8));
-        $bodyHash = hash('sha256', $body);
-
-        $payload = $timestamp . "\n" . $nonce . "\n" . $method . "\n" . $path . "\n" . $bodyHash;
-        $signature = base64_encode(hash_hmac('sha256', $payload, $sharedKey, true));
-
-        return [
-            'x-mig-timestamp' => (string) $timestamp,
-            'x-mig-nonce' => $nonce,
-            'x-mig-peer' => $peer,
-            'x-mig-signature' => $signature,
-        ];
+        // Use generateValidHmacHeaders with precise microtime timestamp
+        return self::generateValidHmacHeaders($sharedKey, $method, $path, $body, $peer, (int) (microtime(true) * 1000));
     }
 
     /**

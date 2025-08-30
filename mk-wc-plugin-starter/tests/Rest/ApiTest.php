@@ -290,15 +290,8 @@ class ApiTest extends TestCase
      */
     public function test_command_finalize_success(): void
     {
-        // Set up job in the correct state for finalization using reflection to access the JobManager
-        $reflection = new \ReflectionClass($this->api);
-        $jobManagerProperty = $reflection->getProperty('jobs');
-        $jobManagerProperty->setAccessible(true);
-        $jobManager = $jobManagerProperty->getValue($this->api);
-
-        // First ensure the job exists in 'created' state
-        $job = $jobManager->get_or_create($this->testJobId);
-        $this->assertEquals('created', $job['state']);
+        // Use the existing JobManager instance from the API
+        $jobManager = $this->api->get_job_manager();
 
         // Set the job through proper state transitions for finalization testing
         $jobManager->set_state($this->testJobId, 'preflight_ok', []);
