@@ -44,7 +44,8 @@ run_with_coverage() {
         mkdir -p tests/results
     fi
 
-    vendor/bin/phpunit \
+    # Enable Xdebug coverage mode for code coverage reporting
+    XDEBUG_MODE=coverage vendor/bin/phpunit \
         --coverage-html=tests/coverage/html \
         --coverage-text=tests/coverage/coverage.txt \
         --coverage-clover=tests/coverage/clover.xml \
@@ -60,9 +61,15 @@ run_with_coverage() {
 # Function to run specific test suites
 run_test_suite() {
     local suite_name="$1"
+    shift
     print_status "Running $suite_name tests..."
 
-    vendor/bin/phpunit --testsuite "$suite_name" "$@"
+    # Check if coverage is requested
+    if [[ "$*" == *--coverage* ]] || [[ "$*" == *--coverage-html* ]] || [[ "$*" == *--coverage-text* ]]; then
+        XDEBUG_MODE=coverage vendor/bin/phpunit --testsuite "$suite_name" "$@"
+    else
+        vendor/bin/phpunit --testsuite "$suite_name" "$@"
+    fi
 }
 
 # Function to run security tests only

@@ -1,0 +1,34 @@
+
+
+Code Coverage Report:
+  2025-08-30 21:53:52
+
+ Summary:
+  Classes: 14.29% (2/14)
+  Methods: 39.06% (50/128)
+  Lines:   34.88% (490/1405)
+
+WpMigrate\Files\ChunkStore
+  Methods:  33.33% ( 2/ 6)   Lines:  91.30% ( 42/ 46)
+WpMigrate\Logging\JsonLogger
+  Methods:  60.00% ( 3/ 5)   Lines:  86.96% ( 20/ 23)
+WpMigrate\Migration\DatabaseEngine
+  Methods: 100.00% ( 4/ 4)   Lines: 100.00% (  7/  7)
+WpMigrate\Migration\DatabaseExporter
+  Methods:   8.33% ( 1/12)   Lines:   1.05% (  1/ 95)
+WpMigrate\Migration\DatabaseImporter
+  Methods:  25.00% ( 1/ 4)   Lines:   1.43% (  1/ 70)
+WpMigrate\Migration\DefaultRetryConfig
+  Methods: 100.00% ( 5/ 5)   Lines: 100.00% (  5/  5)
+WpMigrate\Migration\ErrorRecovery
+  Methods:  57.14% ( 4/ 7)   Lines:  74.26% ( 75/101)
+WpMigrate\Migration\JobManager
+  Methods:  71.43% (10/14)   Lines:  82.14% ( 92/112)
+WpMigrate\Preflight\Checker
+  Methods:  50.00% ( 1/ 2)   Lines:  87.50% ( 14/ 16)
+WpMigrate\Rest\Api
+  Methods:  40.74% (11/27)   Lines:  45.43% (159/350)
+WpMigrate\Security\HmacAuth
+  Methods:  75.00% ( 6/ 8)   Lines:  96.67% ( 58/ 60)
+WpMigrate\State\StateStore
+  Methods:  66.67% ( 2/ 3)   Lines:  75.00% (  3/  4)

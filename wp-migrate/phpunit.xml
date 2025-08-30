@@ -44,8 +44,8 @@
     <!-- Test environment settings -->
     <env name="WP_MIGRATE_TESTING" value="true"/>
     <env name="WP_MIGRATE_TEST_DB" value=":memory:"/>
-    <!-- Disable xdebug if installed for performance -->
-    <ini name="xdebug.mode" value=""/>
+    <!-- Enable Xdebug coverage for code coverage reporting -->
+    <ini name="xdebug.mode" value="debug,coverage"/>
   </php>
   <source>
     <include>

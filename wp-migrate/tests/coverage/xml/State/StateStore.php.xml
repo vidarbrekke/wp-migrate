@@ -1,0 +1,324 @@
+<?xml version="1.0"?>
+<phpunit xmlns="https://schema.phpunit.de/coverage/1.0">
+  <file name="StateStore.php" path="/State">
+    <totals>
+      <lines total="26" comments="2" code="24" executable="5" executed="4" percent="80.00"/>
+      <methods count="3" tested="2" percent="66.67"/>
+      <functions count="0" tested="0" percent="0"/>
+      <classes count="1" tested="0" percent="0.00"/>
+      <traits count="0" tested="0" percent="0"/>
+    </totals>
+    <class name="WpMigrate\State\StateStore" start="6" executable="4" executed="3" crap="4.25">
+      <namespace name="WpMigrate\State"/>
+      <method name="get_job" signature="get_job(string $jobId): array" start="10" end="13" crap="2" executable="2" executed="2" coverage="100"/>
+      <method name="put_job" signature="put_job(string $jobId, array $job): void" start="16" end="18" crap="1" executable="1" executed="1" coverage="100"/>
+      <method name="delete_job" signature="delete_job(string $jobId): void" start="20" end="22" crap="2" executable="1" executed="0" coverage="0"/>
+    </class>
+    <coverage>
+      <line nr="4">
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_complete_migration_workflow"/>
+      </line>
+      <line nr="11">
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_complete_migration_workflow"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_workflow_with_error_recovery"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_invalid_state_transitions_rejected"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_progress_calculation"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_metadata_accumulation"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_db_export_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_db_import_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_search_replace_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_finalize_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_progress_endpoint"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_db_export_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_db_import_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_search_replace_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_finalize_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_progress_endpoint"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_db_export_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_db_import_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_search_replace_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_finalize_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_progress_endpoint"/>
+      </line>
+      <line nr="12">
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_complete_migration_workflow"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_workflow_with_error_recovery"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_invalid_state_transitions_rejected"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_progress_calculation"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_metadata_accumulation"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_db_export_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_db_import_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_search_replace_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_finalize_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_progress_endpoint"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_db_export_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_db_import_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_search_replace_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_finalize_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_progress_endpoint"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_db_export_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_db_import_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_search_replace_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_finalize_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_progress_endpoint"/>
+      </line>
+      <line nr="17">
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_complete_migration_workflow"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_workflow_with_error_recovery"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_invalid_state_transitions_rejected"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_progress_calculation"/>
+        <covered by="WpMigrate\Tests\Migration\MigrationWorkflowTest::test_metadata_accumulation"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_db_export_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_db_import_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_search_replace_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_finalize_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_progress_endpoint"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_db_export_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_db_import_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_search_replace_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_finalize_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_progress_endpoint"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_db_export_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_db_import_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_search_replace_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_command_finalize_success"/>
+        <covered by="WpMigrate\Tests\Rest\ApiTest::test_progress_endpoint"/>
+      </line>
+    </coverage>
+    <source>
+      <line no="1">
+        <token name="T_OPEN_TAG">&lt;?php</token>
+      </line>
+      <line no="2">
+        <token name="T_NAMESPACE">namespace</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">WpMigrate\State</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="3"/>
+      <line no="4">
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EXCLAMATION_MARK">!</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">defined</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'ABSPATH'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EXIT">exit</token>
+        <token name="T_SEMICOLON">;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="5"/>
+      <line no="6">
+        <token name="T_FINAL">final</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLASS">class</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">StateStore</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="7">
+        <token name="T_WHITESPACE">	</token>
+        <token name="T_PRIVATE">private</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONST">const</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">OPTION_PREFIX</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'mig_job_'</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="8"/>
+      <line no="9">
+        <token name="T_WHITESPACE">	</token>
+        <token name="T_DOC_COMMENT">/** @return array&lt;string,mixed&gt; */</token>
+      </line>
+      <line no="10">
+        <token name="T_WHITESPACE">	</token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">get_job</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$jobId</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="11">
+        <token name="T_WHITESPACE">		</token>
+        <token name="T_VARIABLE">$raw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_FULLY_QUALIFIED">\get_option</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">self</token>
+        <token name="T_DOUBLE_COLON">::</token>
+        <token name="T_STRING">OPTION_PREFIX</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOT">.</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$jobId</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="12">
+        <token name="T_WHITESPACE">		</token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">is_array</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$raw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_QUESTION_MARK">?</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$raw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="13">
+        <token name="T_WHITESPACE">	</token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="14"/>
+      <line no="15">
+        <token name="T_WHITESPACE">	</token>
+        <token name="T_DOC_COMMENT">/** @param array&lt;string,mixed&gt; $job */</token>
+      </line>
+      <line no="16">
+        <token name="T_WHITESPACE">	</token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">put_job</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$jobId</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$job</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">void</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="17">
+        <token name="T_WHITESPACE">		</token>
+        <token name="T_NAME_FULLY_QUALIFIED">\update_option</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">self</token>
+        <token name="T_DOUBLE_COLON">::</token>
+        <token name="T_STRING">OPTION_PREFIX</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOT">.</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$jobId</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$job</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">false</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="18">
+        <token name="T_WHITESPACE">	</token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="19"/>
+      <line no="20">
+        <token name="T_WHITESPACE">	</token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">delete_job</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$jobId</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">void</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="21">
+        <token name="T_WHITESPACE">		</token>
+        <token name="T_NAME_FULLY_QUALIFIED">\delete_option</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">self</token>
+        <token name="T_DOUBLE_COLON">::</token>
+        <token name="T_STRING">OPTION_PREFIX</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOT">.</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$jobId</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="22">
+        <token name="T_WHITESPACE">	</token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="23">
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="24"/>
+      <line no="25"/>
+      <line no="26"/>
+    </source>
+  </file>
+</phpunit>
