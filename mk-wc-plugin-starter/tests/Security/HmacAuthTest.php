@@ -165,7 +165,7 @@ class HmacAuthTest extends TestCase
      */
     public function test_verify_request_invalid_signature(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey);
         $headers['x-mig-signature'] = 'invalid-signature-123'; // Tamper with signature
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers);
@@ -230,7 +230,7 @@ class HmacAuthTest extends TestCase
         $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
         $_SERVER['HTTP_X_FORWARDED_SSL'] = 'off';
 
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey);
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers);
 
         $result = $this->auth->verify_request($request);
@@ -251,7 +251,7 @@ class HmacAuthTest extends TestCase
         $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
         $_SERVER['HTTP_X_FORWARDED_SSL'] = 'on';
 
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey);
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers);
 
         $result = $this->auth->verify_request($request);
@@ -267,7 +267,7 @@ class HmacAuthTest extends TestCase
         $methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
 
         foreach ($methods as $method) {
-            $headers = TestHelper::generateValidHmacHeaders(
+            $headers = TestHelper::generateLiveHmacHeaders(
                 $this->sharedKey,
                 $method,
                 '/wp-json/migrate/v1/handshake'
@@ -286,7 +286,7 @@ class HmacAuthTest extends TestCase
      */
     public function test_verify_request_path_normalization(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders(
+        $headers = TestHelper::generateLiveHmacHeaders(
             $this->sharedKey,
             'POST',
             '/wp-json/migrate/v1/handshake',
@@ -350,7 +350,7 @@ class HmacAuthTest extends TestCase
 
         // Simulate 5 concurrent requests
         for ($i = 0; $i < 5; $i++) {
-            $headers = TestHelper::generateValidHmacHeaders($this->sharedKey);
+            $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey);
             $request = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers);
             $results[] = $this->auth->verify_request($request);
         }
@@ -366,7 +366,7 @@ class HmacAuthTest extends TestCase
      */
     public function test_verify_request_malformed_headers(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey);
         $headers['x-mig-timestamp'] = 'invalid-timestamp'; // Non-numeric timestamp
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers);
@@ -381,7 +381,7 @@ class HmacAuthTest extends TestCase
      */
     public function test_verify_request_header_case_insensitivity(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey);
 
         // Convert headers to uppercase
         $upperHeaders = [];

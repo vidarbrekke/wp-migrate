@@ -73,7 +73,7 @@ class ApiTest extends TestCase
     public function test_handshake_success(): void
     {
         $body = '{"job_id":"test-123","capabilities":{"rsync":true}}';
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/handshake', $body, $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/handshake', $body, $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers, $body);
 
@@ -123,7 +123,7 @@ class ApiTest extends TestCase
      */
     public function test_db_export_success(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/db/export', '', $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/db/export', '', $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/db/export', $headers);
         $request->set_param('job_id', $this->testJobId);
@@ -157,7 +157,7 @@ class ApiTest extends TestCase
      */
     public function test_db_export_failure(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/db/export', '', $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/db/export', '', $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/db/export', $headers);
         $request->set_param('job_id', $this->testJobId);
@@ -189,7 +189,7 @@ class ApiTest extends TestCase
      */
     public function test_db_export_missing_job_id(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/db/export', '', $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/db/export', '', $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/db/export', $headers);
         // Don't set job_id parameter
@@ -217,7 +217,7 @@ class ApiTest extends TestCase
     {
         $params = ['action' => 'db_import', 'job_id' => $this->testJobId, 'params' => ['artifact' => 'test-import.sql.zst']];
         $body = wp_json_encode($params);
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $body, $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $body, $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/command', $headers, $body);
 
@@ -258,7 +258,7 @@ class ApiTest extends TestCase
 
         $params = ['action' => 'search_replace', 'job_id' => $this->testJobId, 'params' => $config];
         $body = wp_json_encode($params);
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $body, $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $body, $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/command', $headers, $body);
 
@@ -292,7 +292,7 @@ class ApiTest extends TestCase
     {
         $params = ['action' => 'finalize', 'job_id' => $this->testJobId, 'params' => []];
         $body = wp_json_encode($params);
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $body, $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $body, $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/command', $headers, $body);
 
@@ -320,7 +320,7 @@ class ApiTest extends TestCase
     {
         $params = ['action' => 'unknown_action', 'job_id' => $this->testJobId, 'params' => []];
         $body = wp_json_encode($params);
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $body, $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $body, $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/command', $headers, $body);
 
@@ -349,7 +349,7 @@ class ApiTest extends TestCase
         $chunkData = 'Test chunk data';
         $hash = base64_encode(hash('sha256', $chunkData, true));
 
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/chunk', $chunkData, $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/chunk', $chunkData, $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/chunk', $headers, $chunkData);
         $request->set_param('job_id', $this->testJobId);
@@ -383,7 +383,7 @@ class ApiTest extends TestCase
      */
     public function test_chunk_listing(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'GET', '/wp-json/migrate/v1/chunk', '', $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'GET', '/wp-json/migrate/v1/chunk', '', $this->peerUrl);
 
         $request = TestHelper::createMockRequest('GET', '/migrate/v1/chunk', $headers);
         $request->set_param('job_id', $this->testJobId);
@@ -416,7 +416,7 @@ class ApiTest extends TestCase
      */
     public function test_progress_endpoint(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'GET', '/wp-json/migrate/v1/progress', '', $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'GET', '/wp-json/migrate/v1/progress', '', $this->peerUrl);
 
         $request = TestHelper::createMockRequest('GET', '/migrate/v1/progress', $headers);
         $request->set_param('job_id', $this->testJobId);
@@ -443,7 +443,7 @@ class ApiTest extends TestCase
      */
     public function test_logs_tail_endpoint(): void
     {
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'GET', '/wp-json/migrate/v1/logs/tail', '', $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'GET', '/wp-json/migrate/v1/logs/tail', '', $this->peerUrl);
 
         $request = TestHelper::createMockRequest('GET', '/migrate/v1/logs/tail', $headers);
         $request->set_param('job_id', $this->testJobId);
@@ -502,7 +502,7 @@ class ApiTest extends TestCase
             ->willReturn(['ts' => time() * 1000, 'nonce' => 'test-nonce', 'peer' => $this->peerUrl]);
 
         foreach ($methods as $method) {
-            $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, $method, '/wp-json/migrate/v1/handshake', '', $this->peerUrl);
+            $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, $method, '/wp-json/migrate/v1/handshake', '', $this->peerUrl);
 
             $request = TestHelper::createMockRequest($method, '/migrate/v1/handshake', $headers);
 
@@ -522,7 +522,7 @@ class ApiTest extends TestCase
 
         // Simulate 5 concurrent requests
         for ($i = 0; $i < 5; $i++) {
-            $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/handshake', '', $this->peerUrl);
+            $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/handshake', '', $this->peerUrl);
             $request = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers);
 
             $this->mockAuth
@@ -547,7 +547,7 @@ class ApiTest extends TestCase
     public function test_malformed_json_handling(): void
     {
         $malformedBody = '{"invalid": json content}';
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $malformedBody, $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/command', $malformedBody, $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/command', $headers, $malformedBody);
 
@@ -568,7 +568,7 @@ class ApiTest extends TestCase
     public function test_large_request_body(): void
     {
         $largeBody = str_repeat('a', 50000); // 50KB body
-        $headers = TestHelper::generateValidHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/handshake', $largeBody, $this->peerUrl);
+        $headers = TestHelper::generateLiveHmacHeaders($this->sharedKey, 'POST', '/wp-json/migrate/v1/handshake', $largeBody, $this->peerUrl);
 
         $request = TestHelper::createMockRequest('POST', '/migrate/v1/handshake', $headers, $largeBody);
 
