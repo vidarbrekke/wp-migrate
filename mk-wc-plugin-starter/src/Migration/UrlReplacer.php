@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 use MK\WcPluginStarter\Logging\JsonLogger;
 
-final class UrlReplacer {
+class UrlReplacer {
     public function search_replace_urls( string $jobId, array $config ): array {
         $logger = new JsonLogger( $jobId );
 

@@ -66,6 +66,27 @@ if ( ! function_exists( 'get_site_url' ) ) {
     }
 }
 
+if ( ! function_exists( 'get_bloginfo' ) ) {
+    function get_bloginfo( $show = '', $filter = 'raw' ) {
+        switch ( $show ) {
+            case 'name':
+                return 'Test Site';
+            case 'url':
+                return 'https://test.example.com';
+            case 'description':
+                return 'Test site description';
+            default:
+                return 'Test Site';
+        }
+    }
+}
+
+if ( ! function_exists( 'get_option' ) ) {
+    function get_option( $option, $default = false ) {
+        return $default;
+    }
+}
+
 if ( ! function_exists( 'wp_json_encode' ) ) {
     function wp_json_encode( $data ) {
         return json_encode( $data );
