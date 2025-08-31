@@ -92,6 +92,52 @@ final class Api implements Registrable {
                 'artifact' => [ 'required' => false, 'type' => 'string', 'default' => 'db_dump.sql.zst' ],
             ],
         ] );
+
+        // Staging-only diagnostics: echo received headers to debug HMAC issues
+        $homeUrl = \home_url();
+        $host = (string) \parse_url( $homeUrl, PHP_URL_HOST );
+        if ( \strpos( $host, 'staging.motherknitter.com' ) !== false || \strpos( $host, 'staging.' ) === 0 ) {
+            \register_rest_route( 'migrate/v1', '/diag/headers', [
+                'methods'  => [ 'GET', 'POST' ],
+                'callback' => [ $this, 'diag_headers' ],
+                'permission_callback' => '__return_true',
+            ] );
+            \register_rest_route( 'migrate/v1', '/diag/settings', [
+                'methods'  => 'GET',
+                'callback' => [ $this, 'diag_settings' ],
+                'permission_callback' => '__return_true',
+            ] );
+        }
+    }
+
+    /**
+     * Diagnostic endpoint (staging only): returns sanitized view of incoming headers and request info.
+     */
+    public function diag_headers( \WP_REST_Request $request ) {
+        $headers = (array) $request->get_headers();
+        $serverHeaders = [];
+        foreach ( $_SERVER as $key => $value ) {
+            if ( \strpos( $key, 'HTTP_' ) === 0 ) {
+                $serverHeaders[$key] = is_string( $value ) ? ( \strlen( $value ) > 256 ? \substr( $value, 0, 256 ) . '…' : $value ) : $value;
+            }
+        }
+
+        return new \WP_REST_Response( [
+            'ok' => true,
+            'method' => $request->get_method(),
+            'route' => $request->get_route(),
+            'received_headers' => $headers,
+            'server_http' => $serverHeaders,
+            'body_sha256' => \hash( 'sha256', (string) $request->get_body() ),
+        ] );
+    }
+
+    /**
+     * Diagnostic: show masked settings so we can compare fingerprints with client key.
+     */
+    public function diag_settings( \WP_REST_Request $request ) {
+        $masked = $this->auth->get_masked_settings();
+        return new \WP_REST_Response( [ 'ok' => true, 'settings' => $masked ] );
     }
 
     public function handshake( WP_REST_Request $request ) {

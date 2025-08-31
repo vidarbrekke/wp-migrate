@@ -24,6 +24,18 @@ class HmacAuth {
 	}
 
 	/**
+	 * Return non-sensitive settings for diagnostics (staging only usage).
+	 * @return array{peer_url:string,key_fingerprint:string}
+	 */
+	public function get_masked_settings(): array {
+		$settings = (array) \call_user_func( $this->settingsProvider );
+		$key = isset( $settings['shared_key'] ) ? (string) $settings['shared_key'] : '';
+		$peer = isset( $settings['peer_url'] ) ? (string) $settings['peer_url'] : '';
+		$fingerprint = $key !== '' ? substr( hash( 'sha256', $key ), 0, 12 ) : '';
+		return [ 'peer_url' => $peer, 'key_fingerprint' => $fingerprint ];
+	}
+
+	/**
 	 * Verify HMAC headers per contract. Returns array of normalized headers on success, WP_Error on failure.
 	 */
 	public function verify_request( WP_REST_Request $request ) {
@@ -40,10 +52,10 @@ class HmacAuth {
 		}
 
 		$headers = $this->lowercase_headers( $request->get_headers() );
-		$tsStr = $headers[ self::HDR_TS ][0] ?? '';
-		$nonce = $headers[ self::HDR_NONCE ][0] ?? '';
-		$peer = $headers[ self::HDR_PEER ][0] ?? '';
-		$sig = $headers[ self::HDR_SIG ][0] ?? '';
+		$tsStr = $this->get_header_value( $headers, self::HDR_TS );
+		$nonce = $this->get_header_value( $headers, self::HDR_NONCE );
+		$peer  = $this->get_header_value( $headers, self::HDR_PEER );
+		$sig   = $this->get_header_value( $headers, self::HDR_SIG );
 
 		if ( $tsStr === '' || $nonce === '' || $sig === '' ) {
 			return new WP_Error( 'EAUTH', 'Missing auth headers', [ 'status' => 401 ] );
@@ -85,9 +97,18 @@ class HmacAuth {
 	}
 
 	private function normalize_path( WP_REST_Request $request ): string {
-		// Use the REST route and prefix with /wp-json
+		// Use the REST route and prefix with /wp-json; include raw query string if present
 		$route = $request->get_route(); // like /migrate/v1/handshake
 		$path = '/wp-json' . $route;
+
+		$requestUri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+		if ( $requestUri !== '' ) {
+			$query = (string) ( parse_url( $requestUri, PHP_URL_QUERY ) ?? '' );
+			if ( $query !== '' ) {
+				$path .= '?' . $query;
+			}
+		}
+
 		return $path;
 	}
 
@@ -98,6 +119,22 @@ class HmacAuth {
 			$out[ strtolower( (string) $k ) ] = $v;
 		}
 		return $out;
+	}
+
+	/**
+	 * Get a header value supporting both dash and underscore naming produced by WP REST.
+	 * @param array<string,mixed> $headers
+	 */
+	private function get_header_value( array $headers, string $name ): string {
+		$lower = strtolower( $name ); // e.g. x-mig-timestamp
+		$underscore = str_replace( '-', '_', $lower ); // x_mig_timestamp
+		$val = '';
+		if ( isset( $headers[ $lower ][0] ) && is_string( $headers[ $lower ][0] ) ) {
+			$val = (string) $headers[ $lower ][0 ];
+		} elseif ( isset( $headers[ $underscore ][0] ) && is_string( $headers[ $underscore ][0] ) ) {
+			$val = (string) $headers[ $underscore ][0 ];
+		}
+		return $val;
 	}
 
 	private function is_nonce_used( string $nonce ): bool {

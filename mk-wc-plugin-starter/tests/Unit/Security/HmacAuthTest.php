@@ -36,7 +36,19 @@ class HmacAuthTest extends TestCase
         parent::tearDown();
 
         // Clean up server variables
-        unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTP_X_FORWARDED_SSL']);
+        unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTP_X_FORWARDED_SSL'], $_SERVER['REQUEST_URI']);
+    }
+
+    /**
+     * @return \PHPUnit\Framework\MockObject\MockObject&WP_REST_Request
+     */
+    private function makeRequestMock(): WP_REST_Request
+    {
+        /** @var WP_REST_Request&\PHPUnit\Framework\MockObject\MockObject $request */
+        $request = $this->getMockBuilder(WP_REST_Request::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        return $request;
     }
 
     public function testVerifyRequestSuccess(): void
@@ -51,7 +63,7 @@ class HmacAuthTest extends TestCase
         $payload = $timestamp . "\n" . $nonce . "\n" . $method . "\n" . $path . "\n" . $bodyHash;
         $signature = base64_encode(hash_hmac('sha256', $payload, self::SHARED_KEY, true));
 
-        $request = $this->createMock(WP_REST_Request::class);
+        $request = $this->makeRequestMock();
         $request->method('get_headers')->willReturn([
             'x-mig-timestamp' => [$timestamp],
             'x-mig-nonce' => [$nonce],
@@ -80,7 +92,7 @@ class HmacAuthTest extends TestCase
         };
 
         $auth = new HmacAuth($settingsProvider);
-        $request = $this->createMock(WP_REST_Request::class);
+        $request = $this->makeRequestMock();
 
         $result = $auth->verify_request($request);
 
@@ -91,7 +103,7 @@ class HmacAuthTest extends TestCase
 
     public function testVerifyRequestMissingHeaders(): void
     {
-        $request = $this->createMock(WP_REST_Request::class);
+        $request = $this->makeRequestMock();
         $request->method('get_headers')->willReturn([]);
 
         $result = $this->auth->verify_request($request);
@@ -114,7 +126,7 @@ class HmacAuthTest extends TestCase
         $payload = $oldTimestamp . "\n" . $nonce . "\n" . $method . "\n" . $path . "\n" . $bodyHash;
         $signature = base64_encode(hash_hmac('sha256', $payload, self::SHARED_KEY, true));
 
-        $request = $this->createMock(WP_REST_Request::class);
+        $request = $this->makeRequestMock();
         $request->method('get_headers')->willReturn([
             'x-mig-timestamp' => [$oldTimestamp],
             'x-mig-nonce' => [$nonce],
@@ -138,7 +150,7 @@ class HmacAuthTest extends TestCase
         $timestamp = (string) round(microtime(true) * 1000);
         $nonce = 'replay-nonce-123';
 
-        $request = $this->createMock(WP_REST_Request::class);
+        $request = $this->makeRequestMock();
         $request->method('get_headers')->willReturn([
             'x-mig-timestamp' => [$timestamp],
             'x-mig-nonce' => [$nonce],
@@ -160,7 +172,7 @@ class HmacAuthTest extends TestCase
         $timestamp = (string) round(microtime(true) * 1000);
         $nonce = 'test-nonce-456';
 
-        $request = $this->createMock(WP_REST_Request::class);
+        $request = $this->makeRequestMock();
         $request->method('get_headers')->willReturn([
             'x-mig-timestamp' => [$timestamp],
             'x-mig-nonce' => [$nonce],
@@ -184,7 +196,7 @@ class HmacAuthTest extends TestCase
         $nonce = 'test-nonce-789';
         $wrongPeer = 'https://wrong.example.com';
 
-        $request = $this->createMock(WP_REST_Request::class);
+        $request = $this->makeRequestMock();
         $request->method('get_headers')->willReturn([
             'x-mig-timestamp' => [$timestamp],
             'x-mig-nonce' => [$nonce],
@@ -206,7 +218,7 @@ class HmacAuthTest extends TestCase
     {
         // Test no SSL - should fail with upgrade required
         unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTP_X_FORWARDED_SSL']);
-        $request = $this->createMock(WP_REST_Request::class);
+        $request = $this->makeRequestMock();
         $request->method('get_headers')->willReturn([
             'x-mig-timestamp' => ['123'],
             'x-mig-nonce' => ['test'],
@@ -222,7 +234,7 @@ class HmacAuthTest extends TestCase
     {
         // Test HTTPS detection
         $_SERVER['HTTPS'] = 'on';
-        $request = $this->createMock(WP_REST_Request::class);
+        $request = $this->makeRequestMock();
         $request->method('get_headers')->willReturn([]);
         $result = $this->auth->verify_request($request);
         $this->assertInstanceOf(WP_Error::class, $result);
@@ -231,10 +243,76 @@ class HmacAuthTest extends TestCase
         // Test proxy headers
         unset($_SERVER['HTTPS']);
         $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
-        $request2 = $this->createMock(WP_REST_Request::class);
+        $request2 = $this->makeRequestMock();
         $request2->method('get_headers')->willReturn([]);
         $result2 = $this->auth->verify_request($request2);
         $this->assertInstanceOf(WP_Error::class, $result2);
         $this->assertEquals('EAUTH', $result2->get_error_code()); // Should get auth error, not upgrade error
+    }
+
+    public function testVerifyRequestWithQueryStringInPath(): void
+    {
+        $_SERVER['HTTPS'] = 'on';
+        // Simulate a REST request to /wp-json/migrate/v1/progress?job_id=abc123
+        $_SERVER['REQUEST_URI'] = '/wp-json/migrate/v1/progress?job_id=abc123';
+
+        $timestamp = (string) round(microtime(true) * 1000);
+        $nonce = 'nonce-query-123';
+        $method = 'GET';
+        $pathWithQuery = '/wp-json/migrate/v1/progress?job_id=abc123';
+        $body = '';
+        $bodyHash = hash('sha256', $body);
+
+        $payload = $timestamp . "\n" . $nonce . "\n" . $method . "\n" . $pathWithQuery . "\n" . $bodyHash;
+        $signature = base64_encode(hash_hmac('sha256', $payload, self::SHARED_KEY, true));
+
+        $request = $this->makeRequestMock();
+        $request->method('get_headers')->willReturn([
+            'x-mig-timestamp' => [$timestamp],
+            'x-mig-nonce' => [$nonce],
+            'x-mig-peer' => [self::PEER_URL],
+            'x-mig-signature' => [$signature],
+        ]);
+        $request->method('get_body')->willReturn($body);
+        $request->method('get_method')->willReturn($method);
+        $request->method('get_route')->willReturn('/migrate/v1/progress');
+
+        $result = $this->auth->verify_request($request);
+
+        $this->assertIsArray($result);
+        $this->assertEquals($timestamp, $result['ts']);
+        $this->assertEquals($nonce, $result['nonce']);
+    }
+
+    public function testUnderscoreHeadersAreAccepted(): void
+    {
+        $_SERVER['HTTPS'] = 'on';
+
+        $timestamp = (string) round(microtime(true) * 1000);
+        $nonce = 'underscore-headers-1';
+        $method = 'POST';
+        $path = '/wp-json/migrate/v1/handshake';
+        $body = '{}';
+        $bodyHash = hash('sha256', $body);
+
+        $payload = $timestamp . "\n" . $nonce . "\n" . $method . "\n" . $path . "\n" . $bodyHash;
+        $signature = base64_encode(hash_hmac('sha256', $payload, self::SHARED_KEY, true));
+
+        $request = $this->makeRequestMock();
+        $request->method('get_headers')->willReturn([
+            'x_mig_timestamp' => [$timestamp],
+            'x_mig_nonce' => [$nonce],
+            'x_mig_peer' => [self::PEER_URL],
+            'x_mig_signature' => [$signature],
+        ]);
+        $request->method('get_body')->willReturn($body);
+        $request->method('get_method')->willReturn($method);
+        $request->method('get_route')->willReturn('/migrate/v1/handshake');
+
+        $result = $this->auth->verify_request($request);
+
+        $this->assertIsArray($result);
+        $this->assertEquals($timestamp, $result['ts']);
+        $this->assertEquals($nonce, $result['nonce']);
     }
 }
